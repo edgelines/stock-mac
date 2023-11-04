@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 import warnings
 warnings.filterwarnings('ignore')
 
-if __name__ == '__main__':
+
+def run():
     load_dotenv()
     api_url = os.getenv("API_URL_STOCK_PRICE_DAILY_LIST")
     # 데이터 로드
@@ -24,3 +25,5 @@ if __name__ == '__main__':
     
     pool.close()
     pool.join()
+
+# if __name__ == '__main__':
