@@ -1,0 +1,9 @@
+temp/
+__pycache__/
+module/__pycache__/
+*.pyc
+*.bat
+*.ipynb
+test.py
+.DS_Store
+.env
