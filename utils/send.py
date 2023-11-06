@@ -11,13 +11,14 @@ def errors(msg, e):
     data_list = { 'msg' : msg ,'error' : e}
     response = requests.post(api_url, json=data_list, headers=headers)
     if response.status_code == 200:
-        print(f"Data successfully sent.")
+        print(f"Error Msg Send..")
     
-def data(data_list):
-    api_url = os.getenv("API_URL_STOCK_UPDATE")
-    response = requests.post(api_url, json=data_list, headers=headers)
+def data(data_list, db):
+    api_url = os.getenv("API_URL_POST")
+    response = requests.post(f'{api_url}/{db}', json=data_list, headers=headers)
         
     if response.status_code == 200:
-        print(f"Data successfully sent.")
+        pass
+        # print(f"Data successfully sent.")
     else:
         errors('Mac > Windows 실패 : ', response.status_code)

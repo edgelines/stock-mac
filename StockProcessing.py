@@ -34,7 +34,7 @@ def run():
     for column in numeric_columns:
         df[column] = pd.to_numeric(df[column], errors='coerce')
     
-    send.data(df.to_json(orient='records', force_ascii=False))
+    send.data(df.to_json(orient='records', force_ascii=False), 'StockSearch')
     
 
 if __name__ == '__main__':
