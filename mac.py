@@ -1,10 +1,27 @@
 ## Checkmate ver. Mac
 
 import exchange_calendars as ecals 
-from datetime import datetime
-from utils import holiday 
+from datetime import datetime, time as dt_time
+from utils import holiday, send
 import StockProcessing
 import StockUpdate
+import time
+
+def is_market_open(current_time, start_time, end_time):
+    return start_time <= current_time < end_time
+
+def execute_tasks():
+    current_minute = datetime.now().minute
+    current_second = datetime.now().second
+    
+    if current_minute % 2 == 0:
+        for func, func_name in functions_to_execute:
+            execute_function(func, func_name, str(datetime.now()))
+        print(f' ★  Done : {datetime.now()} // Runtime : {time.time() - start}')
+        print('\n')
+        time.sleep(60 - current_second)
+    else:
+        time.sleep(60 - current_second)
 
 # 함수 실행 및 에러 처리
 def execute_function(func, func_name, current_time):
@@ -14,51 +31,35 @@ def execute_function(func, func_name, current_time):
     except Exception as e:
         print(f" =>  {func_name} : 에러 {current_time}")
         print('\n')
-        error.Log((f'{func_name} : {current_time} '), e)
+        send.errors( f'{func_name} : {current_time}', e )
 
 # 함수 리스트
 functions_to_execute = [
-    (StockProcessing.run, 'StockProcessing()'),
     (StockUpdate.run, 'StockUpdate()'),
+    (StockProcessing.run, 'StockProcessing()'),
 ]
 
 
 while True:
-    현재시각 = str(datetime.today().now())
-    start = time.time()  # 시작 시간 저장
-    current_hour = datetime.today().now().hour
-    current_minute = datetime.today().now().minute
-    current_second = datetime.today().now().second
-    open_time = datetime.strptime("09:02", "%H:%M").time()
-    close_time = datetime.strptime("15:59", "%H:%M").time()
-    start_time = datetime.now()
-    current_time = start_time.time()
-
-    today = datetime.today().strftime("%Y-%m-%d")
-    XKRX = ecals.get_calendar("XKRX") # 한국 코드 print(XKRX.is_session("2021-09-20")) # 2021-09-20 은 개장일인지 확인
+    XKRX = ecals.get_calendar("XKRX")
     holidays = holiday.run()
-    if XKRX.is_session(today) == False or today not in holidays :
+    today = datetime.now().date()
+    start = time.time()  # 시작 시간 저장
+    current_time = datetime.now().time()
+    
+    if XKRX.is_session(today.strftime("%Y-%m-%d")) == False or today in holidays:
+        time.sleep(3600)
         continue
-
-    else :
-        ## 장 오픈 시각 
-        ## 매월 1월 첫날과 수능일엔 10시 시작 16:30 종료
-        print('영업일')
-         if open_time <= current_time < close_time :       
-            if current_minute % 5 == 0 :
-                for func, func_name in functions_to_execute:
-                    execute_function(func, func_name, 현재시각)
-                print(' ★  Done : ' + 현재시각 + ' // Runtime : ' + str(time.time() - start))
-                print('\n')
-                time.sleep(60 - current_second)
-            
-            else :
-                time.sleep(60 - current_second)
     
+    elif today == holiday.get_ksat_date(today.year) or today == holiday.get_first_weekday_of_year(today.year) :
+        if is_market_open(current_time, dt_time(10, 2), dt_time(16, 59)):
+            execute_tasks()
             continue
-        
-        else:
+        else :
+            time.sleep(3600)
+    else:
+        if is_market_open(current_time, dt_time(9, 2), dt_time(15, 59)):
+            execute_tasks()
             continue
-        # if 매월첫날 and 수능일 == True : 
-        #     print('오픈 10시, 종료 16시 30분')
-    
+        else :
+            time.sleep(3600)

@@ -6,9 +6,9 @@ load_dotenv()
 headers = {
     "Content-Type": "application/json"
 }
-def errors(e):
+def errors(msg, e):
     api_url = os.getenv("API_URL_KAKAO")
-    data_list = { 'error' : e}
+    data_list = { 'msg' : msg ,'error' : e}
     response = requests.post(api_url, json=data_list, headers=headers)
     if response.status_code == 200:
         print(f"Data successfully sent.")
@@ -20,5 +20,4 @@ def data(data_list):
     if response.status_code == 200:
         print(f"Data successfully sent.")
     else:
-        errors(response.status_code)
-        
+        errors('Mac > Windows 실패 : ', response.status_code)

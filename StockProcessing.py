@@ -22,10 +22,20 @@ def run():
     
     # None 값을 제거합니다.
     stockIndicators_list = [x for x in stockIndicators_list if x is not None]
-    
     pool.close()
     pool.join()
     
-    send.data(stockIndicators_list)
+    df = pd.DataFrame(stockIndicators_list)
+    df = df.fillna(0)
+    df = df[(df['시가'] > 0) & (df['저가'] > 0) & (df['종가'] > 0) & (df['고가'] > 0)]
+    numeric_columns = ['시가', '고가', '저가', '종가', '거래량', 
+                   'willR_5', 'willR_7', 'willR_14', 'willR_20', 'willR_33', 
+                   'DMI_3', 'DMI_4', 'DMI_5']
+    for column in numeric_columns:
+        df[column] = pd.to_numeric(df[column], errors='coerce')
+    
+    send.data(df.to_json(orient='records', force_ascii=False))
+    
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
+    run()

@@ -7,6 +7,13 @@
   - utils/send.py
     - Error Send KAKAO / URL
     - StockUpdate Result Post / URL
+- Commit : 2
+  - mac.py : 작동코드 리팩토링
+  - main.py : FastAPI
+  - StockProcessing.py : df Null값 처리
+  - holiday.py : 매년 1월 첫날, 수능날 찾기 추가
+  - send.py : 서버전송 코드 수정
+  - utils.py : indicator 에외값처리
 
 ### 2023.11.04
 - .env
