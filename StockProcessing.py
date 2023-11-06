@@ -1,7 +1,7 @@
 from multiprocessing import Pool, cpu_count
 import requests
 import pandas as pd
-from utils import utils
+from utils import utils, send
 import os
 from dotenv import load_dotenv
 import warnings
@@ -25,5 +25,7 @@ def run():
     
     pool.close()
     pool.join()
+    
+    send.data(stockIndicators_list)
 
 # if __name__ == '__main__':

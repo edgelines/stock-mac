@@ -1,7 +1,12 @@
 ### Todo-List
-- Error Send KAKAO / URL
-- StockUpdate Result Post / URL
 - execute 
+- FastAPI Setting
+
+### 2023.11.06
+- Commit : 1
+  - utils/send.py
+    - Error Send KAKAO / URL
+    - StockUpdate Result Post / URL
 
 ### 2023.11.04
 - .env
