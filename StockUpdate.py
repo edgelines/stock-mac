@@ -33,10 +33,10 @@ def run():
     
     api_url = os.getenv("API_URL_MARKET_LIST")
     requestData = requests.get(api_url)
-    data = requestData.json()[0]
-    코스피200_코드 = data['코스피200']
-    코스피_코드 = data['코스피']
-    코스닥_코드 = data['코스닥']
+    tmp = requestData.json()[0]
+    코스피200_코드 = tmp['코스피200']
+    코스피_코드 = tmp['코스피']
+    코스닥_코드 = tmp['코스닥']
 
     with MongoClient('mongodb://localhost:27017/') as client:
         db = client['Stock']

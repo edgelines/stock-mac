@@ -2,6 +2,10 @@
 - execute 
 - FastAPI Setting
 
+### 2023.11.07
+- Commit.1
+  - holiday.py > API 변경
+
 ### 2023.11.06
 - Commit.1
   - utils/send.py

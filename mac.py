@@ -48,7 +48,7 @@ if __name__ == '__main__':
         current_time = datetime.now().time()
         
         if XKRX.is_session(today.strftime("%Y-%m-%d")) == False or today in holidays:
-            time.sleep(3600)
+            time.sleep(120)
             continue
         
         elif today == holiday.get_ksat_date(today.year) or today == holiday.get_first_weekday_of_year(today.year) :
@@ -56,10 +56,10 @@ if __name__ == '__main__':
                 execute_tasks()
                 continue
             else :
-                time.sleep(3600)
+                time.sleep(120)
         else:
             if is_market_open(current_time, dt_time(9, 2), dt_time(15, 59)):
                 execute_tasks()
                 continue
             else :
-                time.sleep(3600)
+                time.sleep(120)
