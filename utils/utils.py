@@ -102,6 +102,8 @@ def calculate_for_ticker(row):
                 "DMI_3": DMI_values[3],
                 "DMI_4": DMI_values[4],
                 "DMI_5": DMI_values[5],
+                "DMI_6": DMI_values[6],
+                "DMI_7": DMI_values[7],
             }
             return indicator_data
         except Exception as e:
