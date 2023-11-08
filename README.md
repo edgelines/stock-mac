@@ -2,6 +2,10 @@
 - execute 
 - FastAPI Setting
 
+### 2023.11.08
+- Commit.1
+  - DMI 6, 7 추가, 데이터셋 40개에서 10개로 줄임
+
 ### 2023.11.07
 - Commit.1
   - holiday.py > API 변경

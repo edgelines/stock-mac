@@ -67,10 +67,10 @@ def cal_DMI(data, n_list=[5], method='단순'):
 def weighted_moving_average(values, weights):
     return sum(val * weight for val, weight in zip(values, weights)) / sum(weights)
 
-def calculate_indicators(stock_data):
-    willR_values = cal_WillR(stock_data, n_days_list=[5, 7, 14, 20, 33])
-    DMI_values = cal_DMI(stock_data, n_list=[3, 4, 5], method='가중')
-    return willR_values, DMI_values
+# def calculate_indicators(stock_data):
+#     willR_values = cal_WillR(stock_data, n_days_list=[5, 7, 14, 20, 33])
+#     DMI_values = cal_DMI(stock_data, n_list=[3, 4, 5], method='가중')
+#     return willR_values, DMI_values
 
 # indicator 계산 함수
 def calculate_for_ticker(row):
@@ -79,8 +79,11 @@ def calculate_for_ticker(row):
         collection = client['Stock'][종목코드]
         stock_data = pd.DataFrame(collection.find({}, {'_id': False})) # 필요한 필드만 가져옴
         데이터 = stock_data.iloc[-40:].copy()
+        DMI데이터 = stock_data.iloc[-10:].copy()
         try:
-            willR_values, DMI_values = calculate_indicators(데이터)
+            # willR_values, DMI_values = calculate_indicators(데이터)
+            willR_values = cal_WillR(데이터, n_days_list=[5, 7, 14, 20, 33])
+            DMI_values = cal_DMI(DMI데이터, n_list=[3, 4, 5,6,7], method='가중')
 
             indicator_data = {
                 "티커": row['종목코드'],
