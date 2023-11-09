@@ -1,6 +1,13 @@
-### Todo-List
-- execute 
-- FastAPI Setting
+### Script
+``` 
+  ~/anaconda3/bin/python mac.py
+  uvicorn main:app --reload --port=7901 --host=0.0.0.0
+```
+
+
+### 2023.11.09
+- Commit.1
+  - Mac.py 작동시 카톡으로 동작여부 체크
 
 ### 2023.11.08
 - Commit.1
