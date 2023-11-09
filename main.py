@@ -30,7 +30,7 @@ async def loadStock(code):
 # ?skip=0&limit=1000
 async def StockSearchTracking(skip: int=0, limit: int=2000):
     try :
-        db = client['Stock']
+        db = client['Search']
         data = db['Tracking']
         mongo_data = list(data.find({}, {'_id':False}).skip(skip).limit(limit))
         return mongo_data

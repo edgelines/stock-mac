@@ -12,6 +12,8 @@
   - 보조지표 조건에 해당하는 종목들 DB insert/update
   - FastAPI 등록 
     - ?skip=0&limit=1000
+- Commit.3
+  - FastAPI - Table Name Fixed
 
 ### 2023.11.08
 - Commit.1

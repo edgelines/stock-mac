@@ -60,7 +60,7 @@ def run():
                         '업종명': row['업종명'],
                         '종목명': row['종목명'],
                         '종가': row['종가'],
-                        '조건일': row['조건일']
+                        '조건일': row['조건일'], 
                     }
                 },
                 upsert=True  # 문서가 없으면 삽입
@@ -70,7 +70,6 @@ def run():
         # Bulk write를 사용하여 모든 연산 실행
         if operations:
             collection.bulk_write(operations, ordered=False)
-     
 
 if __name__ == '__main__':
     run()
