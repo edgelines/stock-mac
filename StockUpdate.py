@@ -2,7 +2,7 @@ import requests
 from json.decoder import JSONDecodeError
 import pandas as pd
 import time
-import datetime
+from datetime import datetime
 from tqdm import tqdm
 from pymongo import MongoClient
 import os
@@ -21,8 +21,8 @@ def run():
     data = pd.DataFrame(requestData.json())
     data = data[data['업종명'] != '기타']
     
-    오늘날짜 = datetime.datetime.now().date() # 현재 날짜와 시간 정보를 가져온 후, 년, 월, 일 
-    today_date = datetime.datetime(오늘날짜.year, 오늘날짜.month, 오늘날짜.day) # 년, 월, 일 정보만 가진 datetime.datetime 객체를 생성
+    오늘날짜 = datetime.now().date() # 현재 날짜와 시간 정보를 가져온 후, 년, 월, 일 
+    today_date = datetime(오늘날짜.year, 오늘날짜.month, 오늘날짜.day) # 년, 월, 일 정보만 가진 datetime.datetime 객체를 생성
 
     # 카운트 초기화
     summary = {

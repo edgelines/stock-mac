@@ -1,9 +1,11 @@
-from multiprocessing import Pool, cpu_count
+import os
 import requests
 import pandas as pd
-from utils import utils, send
-import os
+from multiprocessing import Pool, cpu_count
 from dotenv import load_dotenv
+from datetime import datetime
+from pymongo import MongoClient, UpdateOne
+from utils import utils, send
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -30,12 +32,45 @@ def run():
     df = df[(df['시가'] > 0) & (df['저가'] > 0) & (df['종가'] > 0) & (df['고가'] > 0)]
     numeric_columns = ['시가', '고가', '저가', '종가', '거래량', 
                    'willR_5', 'willR_7', 'willR_14', 'willR_20', 'willR_33', 
-                   'DMI_3', 'DMI_4', 'DMI_5']
+                   'DMI_3', 'DMI_4', 'DMI_5', 'DMI_6', 'DMI_7']
     for column in numeric_columns:
         df[column] = pd.to_numeric(df[column], errors='coerce')
     
     send.data(df.to_json(orient='records', force_ascii=False), 'StockSearch')
     
+    오늘날짜 = datetime.now().date() # 현재 날짜와 시간 정보를 가져온 후, 년, 월, 일 
+    today_date = datetime(오늘날짜.year, 오늘날짜.month, 오늘날짜.day) # 년, 월, 일 정보만 가진 datetime.datetime 객체를 생성
+    tmp = df[( df['willR_5'] < -90) & (df['willR_7'] < -90) & (df['willR_14'] < -90) & (df['willR_20'] < -90) & (df['willR_33'] < -90) 
+            & (df['DMI_3'] < 10) & (df['DMI_4'] < 10) & (df['DMI_5'] < 10) & (df['DMI_6'] < 10) & (df['DMI_7'] < 10)]
+    tmp['조건일'] = today_date
+    tmp['현재가'] = tmp['종가']
+    
+    with MongoClient('mongodb://localhost:27017/') as client:
+        collection = client['Search']['Tracking']
+        # MongoDB에 upsert 수행
+        operations = []
+        for _, row in tmp.iterrows():
+            # 문서가 이미 존재하면 '현재가'를 업데이트, 존재하지 않으면 새로운 문서를 삽입
+            operation = UpdateOne(
+                {'티커': row['티커'], '조건일': row['조건일']},  # 매칭 조건
+                {
+                    '$set': {'현재가': row['종가']},  # 항상 업데이트 될 내용
+                    '$setOnInsert': {  # 문서가 삽입될 때만 설정될 내용
+                        '티커': row['티커'],
+                        '업종명': row['업종명'],
+                        '종목명': row['종목명'],
+                        '종가': row['종가'],
+                        '조건일': row['조건일']
+                    }
+                },
+                upsert=True  # 문서가 없으면 삽입
+            )
+            operations.append(operation)
+
+        # Bulk write를 사용하여 모든 연산 실행
+        if operations:
+            collection.bulk_write(operations, ordered=False)
+     
 
 if __name__ == '__main__':
     run()

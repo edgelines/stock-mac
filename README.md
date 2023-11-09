@@ -4,10 +4,14 @@
   uvicorn main:app --reload --port=7901 --host=0.0.0.0
 ```
 
-
 ### 2023.11.09
 - Commit.1
   - Mac.py 작동시 카톡으로 동작여부 체크
+- Commit.2
+  - Mac.py 작동시간 오타
+  - 보조지표 조건에 해당하는 종목들 DB insert/update
+  - FastAPI 등록 
+    - ?skip=0&limit=1000
 
 ### 2023.11.08
 - Commit.1

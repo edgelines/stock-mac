@@ -16,8 +16,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# uvicorn main:app --reload --port=7901 --host=0.0.0.0
-
 @app.get('/StockData/{code}')
 async def loadStock(code):
     try :
@@ -27,3 +25,15 @@ async def loadStock(code):
         return mongo_data
     except Exception as e:
         return {"error" : str(e)}
+    
+@app.get('/StockSearch/Tracking')
+# ?skip=0&limit=1000
+async def StockSearchTracking(skip: int=0, limit: int=2000):
+    try :
+        db = client['Stock']
+        data = db['Tracking']
+        mongo_data = list(data.find({}, {'_id':False}).skip(skip).limit(limit))
+        return mongo_data
+    except Exception as e:
+        return {"error" : str(e)}
+    
