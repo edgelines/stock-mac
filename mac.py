@@ -8,13 +8,13 @@ import StockUpdate
 import time
 
 def is_market_open(current_time, start_time, end_time):
-    if current_time <= start_time :
-        send.errors( 'Mac-StockProcessing', 'Run' )
     return start_time <= current_time < end_time
 
 def market_start(current_time, start_time, end_time):
-    if start_time < current_time < end_time :
+    current_second = datetime.now().second
+    if start_time < current_time <= end_time :
         send.errors( 'Mac-StockProcessing', 'Run' )
+    time.sleep(60 - current_second)
 
 def execute_tasks():
     current_minute = datetime.now().minute
@@ -57,9 +57,8 @@ if __name__ == '__main__':
             continue
         
         elif today == holiday.get_ksat_date(today.year) or today == holiday.get_first_weekday_of_year(today.year) :
-            if market_start(current_time, dt_time(10, 0), dt_time(10, 1)):
+            if market_start(current_time, dt_time(9, 59), dt_time(10, 0)):
                 print(f'{today.strftime("%Y-%m-%d")} 시작')
-                time.sleep(60)
                 continue
             elif is_market_open(current_time, dt_time(10, 2), dt_time(16, 59)):
                 execute_tasks()
@@ -67,9 +66,8 @@ if __name__ == '__main__':
             else :
                 time.sleep(120)
         else:
-            if market_start(current_time, dt_time(9, 0), dt_time(9, 1)):
+            if market_start(current_time, dt_time(8, 59), dt_time(9, 0)):
                 print(f'{today.strftime("%Y-%m-%d")} 시작')
-                time.sleep(60)
                 continue
             elif is_market_open(current_time, dt_time(9, 2), dt_time(15, 59)):
                 execute_tasks()
