@@ -8,6 +8,9 @@
 - 부채비율, 유보율 가져오기
   - Windows -> Mac DB Insert
 
+### 2023.11.12
+- Commit.1
+  - 부채비율, 유보율 Post API
 
 ### 2023.11.10
 - Commit.1

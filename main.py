@@ -1,8 +1,12 @@
+import json
+import logging
 import pymongo
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import logging
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from urllib.request import urlopen, Request
 from typing import Union
+from utils import db
 
 logging.basicConfig(level=logging.INFO)
 app = FastAPI()
@@ -37,3 +41,17 @@ async def StockSearchTracking(skip: int=0, limit: int=2000):
     except Exception as e:
         return {"error" : str(e)}
     
+@app.post('/post/StockFinance', response_class=JSONResponse)
+async def StockSearch(request:Request) :
+    req_data = await request.json() # post로 받은 데이터
+    req = json.loads(req_data)
+    db.insertDB('Search','StockFinance',req,'티커')
+    # collection = client['Search']['StockFinance']
+    # collection.delete_many({})
+    
+    # if isinstance(req, list):
+    #     collection.insert_many(req)
+    # else:
+    #     collection.insert_one(req)    
+    return {"message" : "Record added successfully"}
+
