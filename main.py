@@ -1,9 +1,10 @@
 import json
 import logging
 import pymongo
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from datetime import datetime
 # from urllib.request import urlopen, Request
 # from typing import Union
 from utils import db
@@ -32,10 +33,14 @@ async def loadStock(code):
     
 @app.get('/StockSearch/Tracking')
 # ?skip=0&limit=1000
-async def StockSearchTracking(skip: int=0, limit: int=2000):
+async def StockSearchTracking(date: datetime = Query(None), skip: int=0, limit: int=2000):
     try :
         db = client['Search']
         data = db['Tracking']
+        
+        query = {}
+        if date :
+            query['조건일'] = date.strftime('%Y-%m-%d')
         mongo_data = list(data.find({}, {'_id':False}).skip(skip).limit(limit))
         return mongo_data
     except Exception as e:

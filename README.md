@@ -13,6 +13,8 @@
   - 부채비율, 유보율 Post API
 - Commit.2 
   - 부채비율, 유보율 추가
+- Commit.3
+  - main.py => Query date
 
 ### 2023.11.10
 - Commit.1
