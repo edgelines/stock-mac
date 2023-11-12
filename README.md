@@ -4,11 +4,19 @@
   uvicorn main:app --reload --port=7901 --host=0.0.0.0
 ```
 
+### Todo
+- 부채비율, 유보율 가져오기
+  - Windows -> Mac DB Insert
+
+
 ### 2023.11.10
 - Commit.1
   - Mac.py 
     - 작동시 카톡으로 동작여부 조건문 오류 수정
     - 작동시간 조정
+- Commit.2
+  - StockProcessing.py
+    - DMI 6,7 임시제건
 
 ### 2023.11.09
 - Commit.1
