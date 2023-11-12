@@ -36,17 +36,22 @@ def run():
     for column in numeric_columns:
         df[column] = pd.to_numeric(df[column], errors='coerce')
     
-    send.data(df.to_json(orient='records', force_ascii=False), 'StockSearch')
-    
-    오늘날짜 = datetime.now().date() # 현재 날짜와 시간 정보를 가져온 후, 년, 월, 일 
-    today_date = datetime(오늘날짜.year, 오늘날짜.month, 오늘날짜.day) # 년, 월, 일 정보만 가진 datetime.datetime 객체를 생성
-    tmp = df[( df['willR_5'] < -90) & (df['willR_7'] < -90) & (df['willR_14'] < -90) & (df['willR_20'] < -90) & (df['willR_33'] < -90) 
-            & (df['DMI_3'] < 10) & (df['DMI_4'] < 10) & (df['DMI_5'] < 10) ]
-            # & (df['DMI_3'] < 10) & (df['DMI_4'] < 10) & (df['DMI_5'] < 10) & (df['DMI_6'] < 10) & (df['DMI_7'] < 10)]
-    tmp['조건일'] = today_date
-    tmp['현재가'] = tmp['종가']
-    
     with MongoClient('mongodb://localhost:27017/') as client:
+        collection = client['Search']['StockFinance']
+        finance = pd.DataFrame(collection.find({}, {'_id':False}))
+        df = pd.merge(df, finance[['티커', '유보율', '부채비율']], on='티커', how='left')
+
+        send.data(df.to_json(orient='records', force_ascii=False), 'StockSearch')
+    
+        오늘날짜 = datetime.now().date() # 현재 날짜와 시간 정보를 가져온 후, 년, 월, 일 
+        today_date = datetime(오늘날짜.year, 오늘날짜.month, 오늘날짜.day) # 년, 월, 일 정보만 가진 datetime.datetime 객체를 생성
+        tmp = df[( df['willR_5'] < -90) & (df['willR_7'] < -90) & (df['willR_14'] < -90) & (df['willR_20'] < -90) & (df['willR_33'] < -90) 
+                & (df['DMI_3'] < 10) & (df['DMI_4'] < 10) & (df['DMI_5'] < 10) ]
+                # & (df['DMI_3'] < 10) & (df['DMI_4'] < 10) & (df['DMI_5'] < 10) & (df['DMI_6'] < 10) & (df['DMI_7'] < 10)]
+        tmp['조건일'] = today_date
+        tmp['현재가'] = tmp['종가']
+    
+    # with MongoClient('mongodb://localhost:27017/') as client:
         collection = client['Search']['Tracking']
         # MongoDB에 upsert 수행
         operations = []
@@ -62,6 +67,8 @@ def run():
                         '종목명': row['종목명'],
                         '종가': row['종가'],
                         '조건일': row['조건일'], 
+                        '유보율': row['유보율'], 
+                        '부채비율': row['부채비율'], 
                     }
                 },
                 upsert=True  # 문서가 없으면 삽입
