@@ -8,6 +8,7 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 from utils import send
+from utils import utils
 
 load_dotenv()
 def getData(code):
@@ -45,21 +46,31 @@ def run():
             try:
                 db = client['Stock']
                 collection = db[종목코드]
-                
                 existing_data = collection.find_one({"날짜": today_date})
+                
                 data_to_insert = {
-                    "날짜": today_date,
-                    "시가": row['시가'],
-                    "고가": row['고가'],
-                    "저가": row['저가'],
-                    "종가": row['현재가'],
-                    "거래량": row['거래량']
+                    "날짜": [today_date],
+                    "시가": [row['시가']],
+                    "고가": [row['고가']],
+                    "저가": [row['저가']],
+                    "종가": [row['현재가']],
+                    "거래량": [row['거래량']],
                 }
-
+                
+                n_list = [3, 4, 5, 6, 7]
+                
+                df = pd.DataFrame(collection.find({}, {'_id': 0, '날짜': 1, '시가': 1, '고가': 1, '저가': 1, '종가': 1, '거래량': 1}).sort('날짜', -1).limit(10))
+                df = df.sort_values(by='날짜').reset_index(drop=True)
+                df_insert = pd.DataFrame(data_to_insert)
+                df = pd.concat([df, df_insert]).reset_index(drop=True)
+                
+                dmi_results_1 = utils.cal_DMI_rolling(df, n_list, method='가중')
+                dmi_results_1 = dmi_results_1.fillna('-')
+                last_row = df.iloc[-1].to_dict()
                 if existing_data:
-                    collection.update_one({"날짜": today_date}, {"$set": data_to_insert})
+                    collection.update_one({"날짜": today_date}, {"$set": last_row})
                 else:
-                    collection.insert_one(data_to_insert)
+                    collection.insert_one(last_row)
                 
                 current_price = row['현재가']
                 try :

@@ -94,10 +94,9 @@ def run():
                 operations.append(operation)
 
             # MongoDB의 'Tracking' 컬렉션에 Bulk write를 사용하여 모든 업데이트 실행
-            with MongoClient('mongodb://localhost:27017/') as client:
-                collection = client['Search']['Tracking']
-                if operations:
-                    collection.bulk_write(operations, ordered=False)
+            collection = client['Search']['Tracking']
+            if operations:
+                collection.bulk_write(operations, ordered=False)
         except Exception as e:
             print('새로운 종목 저장 실패', e)
 

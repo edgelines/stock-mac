@@ -16,6 +16,11 @@
 - StockProcessing.py
   - 부채,유보율 merge 후 nan값 0 처리s
   - 과거 데이터 현재값 업데이트
+  - DB .limit 처리 후 날짜 재정렬 처리
+- StockUpdate.py
+  - DMI 계산추가
+- utils.py
+  - 계산된 DMI 제외처리
 
 ### 2023.11.12
 - Commit.1
