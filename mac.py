@@ -25,7 +25,9 @@ def execute_tasks():
             execute_function(func, func_name, str(datetime.now()))
         print(f' ★  Done : {datetime.now()} // Runtime : {time.time() - start}')
         print('\n')
-        time.sleep(60 - current_second)
+        check = 60 - current_second
+        if check > 0:
+            time.sleep(check)
     else:
         time.sleep(60 - current_second)
 
@@ -57,19 +59,13 @@ if __name__ == '__main__':
             continue
         
         elif today == holiday.get_ksat_date(today.year) or today == holiday.get_first_weekday_of_year(today.year) :
-            if market_start(current_time, dt_time(9, 59), dt_time(10, 0)):
-                print(f'{today.strftime("%Y-%m-%d")} 시작')
-                continue
-            elif is_market_open(current_time, dt_time(10, 2), dt_time(16, 48)):
+            if is_market_open(current_time, dt_time(10, 2), dt_time(16, 48)):
                 execute_tasks()
                 continue
             else :
                 time.sleep(120)
         else:
-            if market_start(current_time, dt_time(8, 59), dt_time(9, 0)):
-                print(f'{today.strftime("%Y-%m-%d")} 시작')
-                continue
-            elif is_market_open(current_time, dt_time(9, 2), dt_time(15, 48)):
+            if is_market_open(current_time, dt_time(9, 2), dt_time(15, 48)):
                 execute_tasks()
                 continue
             else :

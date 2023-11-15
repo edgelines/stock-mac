@@ -40,7 +40,7 @@ def run():
         collection = client['Search']['StockFinance']
         finance = pd.DataFrame(collection.find({}, {'_id':False}))
         df = pd.merge(df, finance[['티커', '유보율', '부채비율']], on='티커', how='left')
-
+        df = df.fillna(0)
         send.data(df.to_json(orient='records', force_ascii=False), 'StockSearch')
     
         오늘날짜 = datetime.now().date() # 현재 날짜와 시간 정보를 가져온 후, 년, 월, 일 
@@ -78,6 +78,28 @@ def run():
         # Bulk write를 사용하여 모든 연산 실행
         if operations:
             collection.bulk_write(operations, ordered=False)
+
+        try :
+            # stockIndicators_list에서 각 티커별 최신 '현재가'를 추출합니다.
+            latest_prices = {item['티커']: item['종가'] for item in stockIndicators_list}
+
+            # MongoDB에 업데이트 수행
+            operations = []
+            for ticker, current_price in latest_prices.items():
+                operation = UpdateOne(
+                    {'티커': ticker},  # 해당 티커에 대응하는 모든 문서를 선택
+                    {'$set': {'현재가': current_price}},  # '현재가'만 업데이트
+                    upsert=False  # 존재하는 문서에 대해서만 업데이트 (삽입은 하지 않음)
+                )
+                operations.append(operation)
+
+            # MongoDB의 'Tracking' 컬렉션에 Bulk write를 사용하여 모든 업데이트 실행
+            with MongoClient('mongodb://localhost:27017/') as client:
+                collection = client['Search']['Tracking']
+                if operations:
+                    collection.bulk_write(operations, ordered=False)
+        except Exception as e:
+            print('새로운 종목 저장 실패', e)
 
 if __name__ == '__main__':
     run()
