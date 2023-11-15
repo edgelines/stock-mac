@@ -5,14 +5,16 @@
 ```
 
 ### Todo
-- StockData pagination
+
 
 ### 2023.11.15
 - 부채비율, 유보율 가져오기 > Windows -> Mac DB Insert
 - Mac.py > 작동시 카톡으로 동작여부 조건문 제거
-- main.py > Tracking Api parameter 수정
+- main.py
+  - Tracking Api parameter 수정
+  - StockData pagination ( limit : 4000 )
 - StockProcessing.py
-  - 부채,유보율 merge 후 nan값 0 처리
+  - 부채,유보율 merge 후 nan값 0 처리s
   - 과거 데이터 현재값 업데이트
 
 ### 2023.11.12

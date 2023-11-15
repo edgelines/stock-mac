@@ -22,11 +22,11 @@ app.add_middleware(
 )
 
 @app.get('/StockData/{code}')
-async def loadStock(code):
+async def loadStock(code, skip: int=0, limit: int=4000):
     try :
         db = client['Stock']
         data = db[code]
-        mongo_data = list(data.find({}, {'_id':False}))
+        mongo_data = list(data.find({}, {'_id':False}).skip(skip).limit(limit))
         return mongo_data
     except Exception as e:
         return {"error" : str(e)}
@@ -48,7 +48,7 @@ async def StockSearchTracking(date: date = Query(None), skip: int=0, limit: int=
             mongo_data = list(data.find(query, {'_id': False}).skip(skip).limit(limit))
         else :
             mongo_data = list(data.find({}, {'_id':False}).skip(skip).limit(limit))
-            
+
         return mongo_data
     except Exception as e:
         return {"error" : str(e)}
