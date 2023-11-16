@@ -77,14 +77,16 @@ def calculate_for_ticker(row):
     종목코드 = row['종목코드']
     with MongoClient('mongodb://localhost:27017/') as client:
         collection = client['Stock'][종목코드]
-        stock_data = pd.DataFrame(collection.find({}, {'_id': False}).sort('날짜', -1).limit(40)) # 필요한 필드만 가져옴
-        stock_data = stock_data.sort_values(by='날짜').reset_index(drop=True)
-        # 데이터 = stock_data.iloc[-40:].copy()
-        # DMI데이터 = stock_data.iloc[-10:].copy()
+        stock_data = pd.DataFrame(collection.find({}, {'_id': False})) # 필요한 필드만 가져옴
+        # stock_data = pd.DataFrame(collection.find({}, {'_id': False}).sort('날짜', -1).limit(40)) # 필요한 필드만 가져옴
+        # stock_data['날짜'] = pd.to_datetime(stock_data['날짜'])
+        # stock_data = stock_data.sort_values(by='날짜').reset_index(drop=True)
+        데이터 = stock_data.iloc[-40:].copy()
+        DMI데이터 = stock_data.iloc[-10:].copy()
         try:
             # willR_values, DMI_values = calculate_indicators(데이터)
-            willR_values = cal_WillR(stock_data, n_days_list=[5, 7, 14, 20, 33])
-            # DMI_values = cal_DMI(DMI데이터, n_list=[3, 4, 5,6,7], method='가중')
+            willR_values = cal_WillR(데이터, n_days_list=[5, 7, 14, 20, 33])
+            DMI_values = cal_DMI(DMI데이터, n_list=[3, 4, 5,6,7], method='가중')
 
             indicator_data = {
                 "티커": row['종목코드'],
@@ -100,16 +102,16 @@ def calculate_for_ticker(row):
                 "willR_14": willR_values[14],
                 "willR_20": willR_values[20],
                 "willR_33": willR_values[33],
-                "DMI_3": row['DMI_3'],
-                "DMI_4": row['DMI_4'],
-                "DMI_5": row['DMI_5'],
-                "DMI_6": row['DMI_6'],
-                "DMI_7": row['DMI_7'],
-                # "DMI_3": DMI_values[3],
-                # "DMI_4": DMI_values[4],
-                # "DMI_5": DMI_values[5],
-                # "DMI_6": DMI_values[6],
-                # "DMI_7": DMI_values[7],
+                # "DMI_3": row['DMI_3'],
+                # "DMI_4": row['DMI_4'],
+                # "DMI_5": row['DMI_5'],
+                # "DMI_6": row['DMI_6'],
+                # "DMI_7": row['DMI_7'],
+                "DMI_3": DMI_values[3],
+                "DMI_4": DMI_values[4],
+                "DMI_5": DMI_values[5],
+                "DMI_6": DMI_values[6],
+                "DMI_7": DMI_values[7],
             }
             return indicator_data
         except Exception as e:

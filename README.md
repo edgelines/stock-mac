@@ -5,22 +5,23 @@
 ```
 
 ### Todo
-
+- 현재가 + DMI 연산 > multiprocessing 처리
+- 현재가가 MA 위아래 연산 따로 처리. 
 
 ### 2023.11.15
 - 부채비율, 유보율 가져오기 > Windows -> Mac DB Insert
 - Mac.py > 작동시 카톡으로 동작여부 조건문 제거
 - main.py
   - Tracking Api parameter 수정
-  - StockData pagination ( limit : 4000 )
+  - ~~StockData pagination ( limit : 4000 )~~ > Stock 날짜 처리를 다시해야함.
 - StockProcessing.py
   - 부채,유보율 merge 후 nan값 0 처리s
   - 과거 데이터 현재값 업데이트
   - DB .limit 처리 후 날짜 재정렬 처리
 - StockUpdate.py
-  - DMI 계산추가
+  - DMI 계산추가 ( 전체 2분 30초 걸림 )
 - utils.py
-  - 계산된 DMI 제외처리
+  - ~~계산된 DMI 제외처리~~ > 원위치. ( DMI 컬럼 찾지못함 )
 
 ### 2023.11.12
 - Commit.1

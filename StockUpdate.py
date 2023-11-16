@@ -59,7 +59,7 @@ def run():
                 
                 n_list = [3, 4, 5, 6, 7]
                 
-                df = pd.DataFrame(collection.find({}, {'_id': 0, '날짜': 1, '시가': 1, '고가': 1, '저가': 1, '종가': 1, '거래량': 1}).sort('날짜', -1).limit(10))
+                df = pd.DataFrame(collection.find({}, {'_id': 0, '날짜': 1, '시가': 1, '고가': 1, '저가': 1, '종가': 1, '거래량': 1}).sort('날짜', -1).limit(8))
                 df = df.sort_values(by='날짜').reset_index(drop=True)
                 df_insert = pd.DataFrame(data_to_insert)
                 df = pd.concat([df, df_insert]).reset_index(drop=True)

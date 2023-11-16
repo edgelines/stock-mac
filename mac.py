@@ -58,7 +58,7 @@ if __name__ == '__main__':
             time.sleep(120)
             continue
         
-        elif today == holiday.get_ksat_date(today.year) or today == holiday.get_first_weekday_of_year(today.year) :
+        elif today.strftime("%Y%m%d") == holiday.get_ksat_date(today.year).strftime("%Y%m%d") or today.strftime("%Y%m%d") == holiday.get_first_weekday_of_year(today.year).strftime("%Y%m%d") :
             if is_market_open(current_time, dt_time(10, 2), dt_time(16, 48)):
                 execute_tasks()
                 continue
