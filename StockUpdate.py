@@ -2,6 +2,7 @@ import requests
 from json.decoder import JSONDecodeError
 import pandas as pd
 import time
+from multiprocessing import Pool, cpu_count
 from datetime import datetime
 from tqdm import tqdm
 from pymongo import MongoClient
@@ -16,15 +17,7 @@ def getData(code):
     requestData = requests.get(f'{api_url}/{code}')
     return pd.DataFrame(requestData.json())
 
-def run():
-    api_url = os.getenv("API_URL_STOCK_PRICE_DAILY_LIST")
-    requestData = requests.get(api_url)
-    data = pd.DataFrame(requestData.json())
-    data = data[data['업종명'] != '기타']
-    
-    오늘날짜 = datetime.now().date() # 현재 날짜와 시간 정보를 가져온 후, 년, 월, 일 
-    today_date = datetime(오늘날짜.year, 오늘날짜.month, 오늘날짜.day) # 년, 월, 일 정보만 가진 datetime.datetime 객체를 생성
-
+def marketMA(today_date, data):
     # 카운트 초기화
     summary = {
         '코스피_전체': 0, '코스피_위_MA50': 0, '코스피_위_MA112': 0, '코스피_위_MA20': 0,
@@ -46,32 +39,7 @@ def run():
             try:
                 db = client['Stock']
                 collection = db[종목코드]
-                existing_data = collection.find_one({"날짜": today_date})
-                
-                data_to_insert = {
-                    "날짜": [today_date],
-                    "시가": [row['시가']],
-                    "고가": [row['고가']],
-                    "저가": [row['저가']],
-                    "종가": [row['현재가']],
-                    "거래량": [row['거래량']],
-                }
-                
-                n_list = [3, 4, 5, 6, 7]
-                
-                df = pd.DataFrame(collection.find({}, {'_id': 0, '날짜': 1, '시가': 1, '고가': 1, '저가': 1, '종가': 1, '거래량': 1}).sort('날짜', -1).limit(8))
-                df = df.sort_values(by='날짜').reset_index(drop=True)
-                df_insert = pd.DataFrame(data_to_insert)
-                df = pd.concat([df, df_insert]).reset_index(drop=True)
-                
-                dmi_results_1 = utils.cal_DMI_rolling(df, n_list, method='가중')
-                dmi_results_1 = dmi_results_1.fillna('-')
-                last_row = df.iloc[-1].to_dict()
-                if existing_data:
-                    collection.update_one({"날짜": today_date}, {"$set": last_row})
-                else:
-                    collection.insert_one(last_row)
-                
+
                 current_price = row['현재가']
                 try :
                     stock_data = pd.DataFrame(collection.find({}, {'_id': False}))
@@ -125,3 +93,117 @@ def run():
         send.data(tmp.to_json(orient='records', force_ascii=False), 'IndexMA')
     except Exception as e:
         send.errors('Mac > StockUpdate,MarketMA :', e)
+
+def DMI_Rolling(args):
+    today_date, row = args
+    종목코드 = row['종목코드']
+    
+    with MongoClient('mongodb://localhost:27017/') as client:
+        db = client['Stock']    
+        collection = db[종목코드]
+        existing_data = collection.find_one({"날짜": today_date})
+            
+        data_to_insert = {
+            "날짜": [today_date],
+            "시가": [row['시가']],
+            "고가": [row['고가']],
+            "저가": [row['저가']],
+            "종가": [row['현재가']],
+            "거래량": [row['거래량']],
+        }
+        
+        n_list = [3, 4, 5, 6, 7]
+            
+        df = pd.DataFrame(collection.find({}, {'_id': 0, '날짜': 1, '시가': 1, '고가': 1, '저가': 1, '종가': 1, '거래량': 1}).sort('날짜', -1).limit(8))
+        df = df.sort_values(by='날짜').reset_index(drop=True)
+        df_insert = pd.DataFrame(data_to_insert)
+        df = pd.concat([df, df_insert]).reset_index(drop=True)
+            
+        dmi_results_1 = utils.cal_DMI_rolling(df, n_list, method='가중')
+        dmi_results_1 = dmi_results_1.fillna('-')
+        last_row = df.iloc[-1].to_dict()
+        if existing_data:
+            collection.update_one({"날짜": today_date}, {"$set": last_row})
+        else:
+            collection.insert_one(last_row)
+            
+    # with MongoClient('mongodb://localhost:27017/') as client:
+    #     db = client['Stock']
+    #     for idx, row in tqdm(data.iterrows()):
+    #         종목코드 = row['종목코드']
+    #         db = client['Stock']
+    #         collection = db[종목코드]
+    #         existing_data = collection.find_one({"날짜": today_date})
+            
+    #         data_to_insert = {
+    #             "날짜": [today_date],
+    #             "시가": [row['시가']],
+    #             "고가": [row['고가']],
+    #             "저가": [row['저가']],
+    #             "종가": [row['현재가']],
+    #             "거래량": [row['거래량']],
+    #         }
+            
+    #         n_list = [3, 4, 5, 6, 7]
+            
+    #         df = pd.DataFrame(collection.find({}, {'_id': 0, '날짜': 1, '시가': 1, '고가': 1, '저가': 1, '종가': 1, '거래량': 1}).sort('날짜', -1).limit(8))
+    #         df = df.sort_values(by='날짜').reset_index(drop=True)
+    #         df_insert = pd.DataFrame(data_to_insert)
+    #         df = pd.concat([df, df_insert]).reset_index(drop=True)
+            
+    #         dmi_results_1 = utils.cal_DMI_rolling(df, n_list, method='가중')
+    #         dmi_results_1 = dmi_results_1.fillna('-')
+    #         last_row = df.iloc[-1].to_dict()
+    #         if existing_data:
+    #             collection.update_one({"날짜": today_date}, {"$set": last_row})
+    #         else:
+    #             collection.insert_one(last_row)
+
+def run():
+    api_url = os.getenv("API_URL_STOCK_PRICE_DAILY_LIST")
+    requestData = requests.get(api_url)
+    data = pd.DataFrame(requestData.json())
+    data = data[data['업종명'] != '기타']
+    
+    오늘날짜 = datetime.now().date() # 현재 날짜와 시간 정보를 가져온 후, 년, 월, 일 
+    today_date = datetime(오늘날짜.year, 오늘날짜.month, 오늘날짜.day) # 년, 월, 일 정보만 가진 datetime.datetime 객체를 생성
+
+    marketMA(today_date, data)
+
+    pool = Pool(cpu_count()) # 사용 가능한 모든 CPU 코어를 사용하여 Pool을 생성
+    pool.map(DMI_Rolling, [(today_date, row) for _, row in data.iterrows()])
+
+    # with MongoClient('mongodb://localhost:27017/') as client:
+    #     db = client['Stock']
+    #     for idx, row in tqdm(data.iterrows()):
+    #         종목코드 = row['종목코드']
+    #         db = client['Stock']
+    #         collection = db[종목코드]
+    #         existing_data = collection.find_one({"날짜": today_date})
+            
+    #         data_to_insert = {
+    #             "날짜": [today_date],
+    #             "시가": [row['시가']],
+    #             "고가": [row['고가']],
+    #             "저가": [row['저가']],
+    #             "종가": [row['현재가']],
+    #             "거래량": [row['거래량']],
+    #         }
+            
+    #         n_list = [3, 4, 5, 6, 7]
+            
+    #         df = pd.DataFrame(collection.find({}, {'_id': 0, '날짜': 1, '시가': 1, '고가': 1, '저가': 1, '종가': 1, '거래량': 1}).sort('날짜', -1).limit(8))
+    #         df = df.sort_values(by='날짜').reset_index(drop=True)
+    #         df_insert = pd.DataFrame(data_to_insert)
+    #         df = pd.concat([df, df_insert]).reset_index(drop=True)
+            
+    #         dmi_results_1 = utils.cal_DMI_rolling(df, n_list, method='가중')
+    #         dmi_results_1 = dmi_results_1.fillna('-')
+    #         last_row = df.iloc[-1].to_dict()
+    #         if existing_data:
+    #             collection.update_one({"날짜": today_date}, {"$set": last_row})
+    #         else:
+    #             collection.insert_one(last_row)
+                
+                
+                
