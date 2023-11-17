@@ -62,10 +62,16 @@ if __name__ == '__main__':
             if is_market_open(current_time, dt_time(10, 2), dt_time(16, 48)):
                 execute_tasks()
                 continue
+            elif is_market_open(current_time, dt_time(17, 10), dt_time(17, 15)):
+                execute_tasks()
+                continue
             else :
                 time.sleep(120)
         else:
             if is_market_open(current_time, dt_time(9, 2), dt_time(15, 48)):
+                execute_tasks()
+                continue
+            elif is_market_open(current_time, dt_time(16, 10), dt_time(16, 15)):
                 execute_tasks()
                 continue
             else :
