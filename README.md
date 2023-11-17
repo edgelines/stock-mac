@@ -2,11 +2,15 @@
 ``` 
   ~/anaconda3/bin/python mac.py
   uvicorn main:app --reload --port=7901 --host=0.0.0.0
+  chmod +x /Users/checkmate/Work/checkmateStock/utils/mongodb_backup.sh
 ```
 
 ### Todo
 - 현재가 + DMI 연산 > multiprocessing 처리
 - 현재가가 MA 위아래 연산 따로 처리. 
+
+### 2023.11.17
+- Websocket Test
 
 ### 2023.11.16
 - StockUpdate.py
