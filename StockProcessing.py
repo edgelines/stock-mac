@@ -46,8 +46,8 @@ def run():
         오늘날짜 = datetime.now().date() # 현재 날짜와 시간 정보를 가져온 후, 년, 월, 일 
         today_date = datetime(오늘날짜.year, 오늘날짜.month, 오늘날짜.day) # 년, 월, 일 정보만 가진 datetime.datetime 객체를 생성
         tmp = df[( df['willR_5'] < -90) & (df['willR_7'] < -90) & (df['willR_14'] < -90) & (df['willR_20'] < -90) & (df['willR_33'] < -90) 
-                & (df['DMI_3'] < 10) & (df['DMI_4'] < 10) & (df['DMI_5'] < 10) ]
-                # & (df['DMI_3'] < 10) & (df['DMI_4'] < 10) & (df['DMI_5'] < 10) & (df['DMI_6'] < 10) & (df['DMI_7'] < 10)]
+                & (df['DMI_3'] < 3) & (df['DMI_4'] < 4) & (df['DMI_5'] < 5) & (df['DMI_6'] < 10) & (df['DMI_7'] < 10)
+                & (df['유보율'] > 100) & (df['부채비율'] < 500) & (df['종가'] < 100000) & (df['종가'] > 500)]
         tmp['조건일'] = today_date
         tmp['현재가'] = tmp['종가']
     

@@ -9,6 +9,9 @@
 - 현재가 + DMI 연산 > multiprocessing 처리
 - 현재가가 MA 위아래 연산 따로 처리. 
 
+### 2023.11.22
+- 조건변경
+
 ### 2023.11.17
 - Websocket Test
 
