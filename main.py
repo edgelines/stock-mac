@@ -24,6 +24,7 @@ from Api.schedule import router as schedule
 from Api.stocks import router as stock
 from Api.themes import router as themes
 from Api.fundamental import router as fundamental
+from Api.industryChartData import router as industryChartData
 logging.basicConfig(level=logging.INFO)
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 client = pymongo.MongoClient(host=['localhost:27017'])
@@ -43,6 +44,7 @@ app.include_router(themeTop10, prefix="/api/themeTop10")
 app.include_router(schedule, prefix="/api/schedule")
 app.include_router(themes, prefix="/api/themes")
 app.include_router(fundamental, prefix="/api/fundamental")
+app.include_router(industryChartData, prefix="/api/industryChartData")
 # app.include_router(post, prefix="/post")
 # app.include_router(web, prefix="/web")
 # CORS 설정

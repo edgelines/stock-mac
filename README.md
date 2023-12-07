@@ -7,8 +7,12 @@
   chmod +x /Users/checkmate/Work/checkmateStock/utils/mongodb_backup.sh
 ```
 
+
 ### 2023.12.05 ~ 2023.12.07
-- 기능제거, Gunicorn
+- Commit.1
+  - 기능제거, Gunicorn
+- Commit.2
+  - industryChartData 추가
 
 ### 2023.11.22
 - 조건변경
