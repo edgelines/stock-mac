@@ -54,7 +54,7 @@ def get_top_themes(rankName, StockSectorsThemes, StockThemes, 종목등락률, �
 
     return top10Themes
 
-@router.post('/IndustryChartData', response_class=JSONResponse)
+@router.post('/getThemes', response_class=JSONResponse)
 async def IndustryChartData( request:Request ):
     req_data = await request.json() # post로 받은 데이터
     # req_data = json.dumps(req)

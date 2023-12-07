@@ -13,6 +13,8 @@
   - 기능제거, Gunicorn
 - Commit.2
   - industryChartData 추가
+- Commit.3
+  - industryChartData api 명칭변경
 
 ### 2023.11.22
 - 조건변경
