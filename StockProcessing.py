@@ -42,7 +42,9 @@ def run():
         df = pd.merge(df, finance[['티커', '유보율', '부채비율']], on='티커', how='left')
         df = df.fillna(0)
         send.data(df.to_json(orient='records', force_ascii=False), 'StockSearch')
-    
+        for col in ['유보율', '부채비율']:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+        
         오늘날짜 = datetime.now().date() # 현재 날짜와 시간 정보를 가져온 후, 년, 월, 일 
         today_date = datetime(오늘날짜.year, 오늘날짜.month, 오늘날짜.day) # 년, 월, 일 정보만 가진 datetime.datetime 객체를 생성
         tmp = df[( df['willR_5'] < -90) & (df['willR_7'] < -90) & (df['willR_14'] < -90) & (df['willR_20'] < -90) & (df['willR_33'] < -90) 
@@ -51,7 +53,7 @@ def run():
         tmp['조건일'] = today_date
         tmp['현재가'] = tmp['종가']
     
-    # with MongoClient('mongodb://localhost:27017/') as client:
+        # with MongoClient('mongodb://localhost:27017/') as client:
         collection = client['Search']['Tracking']
         # MongoDB에 upsert 수행
         operations = []

@@ -2,17 +2,20 @@
 ``` 
   ~/anaconda3/bin/python mac.py
   uvicorn main:app --reload --port=7901 --host=0.0.0.0
+  gunicorn -k uvicorn.workers.UvicornWorker --access-logfile ./gunicorn-access.log main:app --bind 0.0.0.0:7901 --workers 8
+  gunicorn -k uvicorn.workers.UvicornWorker --access-logfile ./gunicorn-access.log main:app --bind 0.0.0.0:7901 --workers 16
   chmod +x /Users/checkmate/Work/checkmateStock/utils/mongodb_backup.sh
 ```
 
-### Todo
-- 현재가 + DMI 연산 > multiprocessing 처리
-- 현재가가 MA 위아래 연산 따로 처리. 
+### 2023.12.05 ~ 2023.12.07
+- 기능제거, Gunicorn
 
 ### 2023.11.22
 - 조건변경
 
 ### 2023.11.17
+- 현재가 + DMI 연산 > multiprocessing 처리
+- 현재가가 MA 위아래 연산 따로 처리. 
 - Websocket Test
 
 ### 2023.11.16

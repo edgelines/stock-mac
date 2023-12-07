@@ -43,7 +43,7 @@ def execute_function(func, func_name, current_time):
 # 함수 리스트
 functions_to_execute = [
     (StockUpdate.run, 'StockUpdate()'),
-    (StockProcessing.run, 'StockProcessing()'),
+    # (StockProcessing.run, 'StockProcessing()'),
 ]
 
 if __name__ == '__main__':
