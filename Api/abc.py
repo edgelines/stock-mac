@@ -13,15 +13,15 @@ logging.basicConfig(level=logging.INFO)
 router = APIRouter()
 client = pymongo.MongoClient(host=['192.168.0.3:27017'])
 
-@router.get("/stockPrice")
-async def StockPrice():
-    try :
-        result = client['ABC']['stockPrice']
-        data = pd.DataFrame(result.find({}, {'_id':0}))
-        data = data.fillna(0)
-        return data.to_dict(orient='records')
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+# @router.get("/stockPrice")
+# async def StockPrice():
+#     try :
+#         result = client['ABC']['stockPrice']
+#         data = pd.DataFrame(result.find({}, {'_id':0}))
+#         data = data.fillna(0)
+#         return data.to_dict(orient='records')
+#     except Exception as e:
+#         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
 @router.get("/stockSectorsThemes")
 async def StockSectorsThemes():

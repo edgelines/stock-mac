@@ -18,8 +18,9 @@ async def themesRank():
     try :
         db = client['Themes']
         col = db['Rank']        
-        data = list(col.find({},{'_id' :0}))
-        return data
+        data = pd.DataFrame(col.find({},{'_id' :0}))
+        df = data.fillna(len(data))
+        return df.to_dict(orient='records')
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})

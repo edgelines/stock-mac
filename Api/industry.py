@@ -19,6 +19,7 @@ async def stockSectors():
         db = client['Industry']
         col = db['Rank']        
         data = list(col.find({},{'_id' :0, '전체' : 0, '상승' : 0, '보합' : 0, '하락' : 0, '등락그래프' : 0, '상승%' : 0, '순위' : 0}))
+        # return data
         return sorted(data, key=lambda x: x['전일대비'], reverse=True )
     except Exception as e:
         logging.error(e)

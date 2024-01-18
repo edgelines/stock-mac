@@ -8,6 +8,7 @@ import json
 import pandas as pd
 import numpy as np
 import logging
+from datetime import datetime, timedelta
 logging.basicConfig(level=logging.INFO)
 
 router = APIRouter()
@@ -41,7 +42,39 @@ async def StockIPO( skip: int=0, limit: int=3000 ):
         return data
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+
+@router.get('/weeks')
+async def Weeks( date:str = Query(None)):
+    try :
+        col = client.Schedule.Weeks
+        query ={}
+        if date :
+            now = datetime.strptime(date, '%Y-%m-%d')
+            startDay = now - timedelta(days = now.weekday())
+            endDay = startDay + timedelta(days=6)
+            query = {'날짜' : {'$gte' : startDay, '$lte':endDay}}
+        
+        result = pd.DataFrame(col.find(query, {'_id':0}))
+        result['날짜'] = pd.to_datetime(result['날짜']).astype('int64') // 10**6
+        return result.to_dict(orient='records')
+        
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+
+@router.get('/coex')
+async def Coex():
+    try :
+        col = client.Schedule.Coex
+        data = pd.DataFrame(col.find({}, {'_id':False}))
+        data = data.sort_values(by='StartDate')
+        data['id'] = data.index
+        return data.to_dict(orient='records')
     
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+
 @router.get('/{name}')
 async def loadDB(name):
     try :

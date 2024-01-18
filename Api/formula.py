@@ -53,6 +53,9 @@ async def Treasury():
         col_재무 = client.Info.StockFinance
         재무 = pd.DataFrame(col_재무.find({},{'_id' : 0, '종목명' :0, '시가총액' :0}))
         
+        # col_재무 = client.Info.Financial
+        # 재무 = pd.DataFrame(col_재무.find({},{'_id' : 0, '분기실적' :0, '연간실적' :0}))
+        
         중간정리 = pd.merge(자기주식, 주식, on='종목코드', how='left')
         중간정리.dropna(inplace=True)
         중간정리['수익률'] = 중간정리.apply(lambda x: ((x['현재가'] - x['평균단가']) / x['평균단가'])*100 if x['평균단가'] != 0 else 0, axis=1)

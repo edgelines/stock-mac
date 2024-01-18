@@ -1,9 +1,8 @@
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 import pymongo
 import json
-# from pydantic import BaseModel
-# from datetime import datetime
 import pandas as pd
 import numpy as np
 import logging
@@ -14,7 +13,8 @@ client = pymongo.MongoClient(host=['192.168.0.3:27017'])
 
 @router.get("/CTP")
 async def get_elw_bar_data():
-    result = client['AoX']['elwBarData']
+    # result = client['AoX']['elwBarData']
+    result = client['ELW']['ElwBarData']
     data = pd.DataFrame(result.find({}, {'_id':False}))
     # 월별로 데이터를 필터링합니다.
     data_by_month = [data[data['월구분'] == str(month)] for month in range(1, 7)]
@@ -69,10 +69,8 @@ async def get_elw_bar_data():
 # CallPutPage 왼쪽 상단 Chart
 @router.get('/ElwPutCallRatioData')
 async def ElwPutCallRatioData():
-    # file_path = 'D:/Data/ElwPutCallRatioData.json'
-    # with open(file_path, encoding='utf-8') as json_file:
-    #     data = json.load(json_file)
-    result = client['AoX']['ElwPutCallRatioData']
+    # result = client['AoX']['ElwPutCallRatioData']
+    result = client['ELW']['ElwPutCallRatioData']
     data = list(result.find({}, {'_id':0}))
     
     Day1, Day2, Day3, Day4, Day5, Day20, Day100 = [], [], [], [], [], [], []
@@ -107,8 +105,8 @@ async def ElwPutCallRatioData():
 
 # CallPutPage 가운데 상단 Chart
 @router.get('/DayGr')
-async def ElwPutCallRatioData():
-    result = client['AoX']['DayGr']
+async def DayGr():
+    result = client['ELW']['DayGr']
     response_data = list(result.find({}, {'_id':False}))
     
     # data = pd.DataFrame(data)
@@ -158,7 +156,8 @@ async def ElwPutCallRatioData():
 # CallPutPage 오른쪽 상단 Chart
 @router.get('/ElwRatioData')
 async def ElwRatioData():
-    result = client['AoX']['ElwRatioData']
+    # result = client['AoX']['ElwRatioData']
+    result = client['ELW']['ElwRatioData']
     data = pd.DataFrame(result.find({}, {'_id':0}).sort([('날짜', -1)]).limit(8))
     data=data.sort_values(by='날짜')
     data = data.to_dict(orient='records')
@@ -183,3 +182,12 @@ async def ElwRatioData():
         }
     
     return result
+
+@router.get('/{name}')
+async def loadDB(name):
+    try :
+        col = client['ELW'][name]
+        return list(col.find({}, {'_id':False}))
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})

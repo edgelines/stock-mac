@@ -19,6 +19,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 # from bson import ObjectId, json_util
 from ipaddress import ip_address
 import logging
+import Api.tools as tools
 
 # from web import router as web
 # logging.basicConfig(filename='dummy.log', level=logging.INFO)
@@ -29,17 +30,8 @@ client = pymongo.MongoClient(host=['192.168.0.3:27017'])
 @router.get('/{name}')
 async def loadDB(name):
     try :
-        result = client['AoX'][name]
-        return list(result.find({}, {'_id':False}))
-    except Exception as e:
-        logging.error(e)
-        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
-
-@router.get('/ALL/{name}')
-async def load_ALL_DB(name):
-    try :
-        result = client['ALL'][name]
-        return list(result.find({}, {'_id':False}))
+        col = client['AoX'][name]
+        return list(col.find({}, {'_id':False}))
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
@@ -47,44 +39,16 @@ async def load_ALL_DB(name):
 @router.get('/Treasury/{name}')
 async def load_TreasuryStock(name):
     try :
-        result = client['TreasuryStock'][name]
-        return list(result.find({}, {'_id':False}))
+        col = client['TreasuryStock'][name]
+        return list(col.find({}, {'_id':False}))
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
-# @router.get('/json/{name}')
-# async def loadJson(name):
-#     file_path = 'D:/Data/' + str(name) + '.json'
-#     with open(file_path, encoding='utf-8') as json_file:
-#         data = json.load(json_file)
-#     return data
-
-@router.get('/VixMA')
-async def VixMA():
-    db = client['AoX']
-    result = db['Vix']
-    return list(result.find({}, {'_id':False}))[-200:]
-    # Vix = pd.DataFrame.from_records(result.find({}, {'_id':False}))
-
-# @router.get('/exPast/{name}/{num}')
-# async def exPast(name, num):
-#     file_path = 'D:/CheckMate/data/exPast_' + str(name)+str(num) + '.json'
-#     with open(file_path, encoding='utf-8') as json_file:
-#         data = json.load(json_file)
-#     return data
 
 @router.get('/NaverDataLab/{getKey}/{timeUnit}/{name}')
 async def naverDataLabDB(getKey, timeUnit, name):
     db = client[f'NaverDataLab_{getKey}_{timeUnit}']
-    result = db[name]
-    return list(result.find({}, {'_id':False}))
-
-# @router.get("/image/{file_path:path}")
-# async def read_image(file_path: str):
-#     return FileResponse('D:/Data/' + file_path+'.jpg')
-
-# @router.get("/icon/{file_path:path}")
-# async def read_image(file_path: str):
-#     return FileResponse('D:/Data/icon/' + file_path+'.png')
+    col = db[name]
+    return list(col.find({}, {'_id':False}))
 

@@ -10,6 +10,7 @@ logging.basicConfig(level=logging.INFO)
 
 router = APIRouter()
 client = pymongo.MongoClient(host=['192.168.0.3:27017'])
+# url : /industryChartData/
 
 def get_top_themes(rankName, StockSectorsThemes, StockThemes, 종목등락률, 추출테마수):
     sectorsData = [row for row in StockSectorsThemes if row['업종명'] in rankName and row['등락률'] >= 종목등락률]
@@ -55,7 +56,7 @@ def get_top_themes(rankName, StockSectorsThemes, StockThemes, 종목등락률, �
     return top10Themes
 
 @router.post('/getThemes', response_class=JSONResponse)
-async def IndustryChartData( request:Request ):
+async def GetThemes( request:Request ):
     req_data = await request.json() # post로 받은 데이터
     # req_data = json.dumps(req)
 
@@ -170,5 +171,155 @@ async def IndustryChartData( request:Request ):
         
         return result
         
+    except Exception as e:
+        return {"error" : str(e)}
+
+def 상위10개테마추출(df):
+    # 테마명의 출현 빈도 계산
+    theme_count = pd.Series([theme for sublist in df['테마명'] for theme in sublist]).value_counts()
+    # 상위 10개 테마 추출
+    top_10_themes = theme_count.head(10).reset_index()
+    top_10_themes.columns = ['theme', 'count']
+
+    # 탑10 테마리스트
+    top_themes = top_10_themes['theme'].to_list()
+    ThemeStocksCollection = client.Info.ThemeStocksCollection
+    data3 = list(ThemeStocksCollection.find({},{'_id' :0}))
+
+    # 각테마에 해당하는 종목들 가져옴
+    top_theme_items = [item for item in data3 if item['테마명'] in top_themes]
+
+    현재가 = client.Info.StockPriceDaily
+    data4 = pd.DataFrame(현재가.find({},{'_id' :0, '거래량':0, '전일거래량':0, '현재가' : 0, '고가' :0, '시가' :0, '저가':0}))
+
+    top_2_by_theme = []
+    for theme_data in top_theme_items:
+        # 현재 테마의 종목코드 리스트
+        theme_stock_codes = [item['종목코드'] for item in theme_data['data']]
+
+        # StockPrice에서 현재 테마의 종목만 필터링
+        theme_stocks = data4[data4['종목코드'].isin(theme_stock_codes)]
+
+        # 등락률에 따라 상위 2개 종목 추출
+        top_2_stocks = theme_stocks.nlargest(2, '등락률')
+
+        # 결과에 추가
+        top_2_by_theme.append({
+            'theme': theme_data['테마명'],
+            'items': top_2_stocks.to_dict(orient='records')
+        })
+    top_2_by_theme = pd.DataFrame(top_2_by_theme)
+    result = pd.merge(top_10_themes, top_2_by_theme, on='theme')
+    return result.to_dict(orient='records')
+
+def filtered_rows(filtered_data, volume_range, reserve_ratio, ratio_range, volume_avg, market_cap, debt_ratio, order, order_by, ABC):
+    filtered_rows = [row for row in filtered_data if
+                    int(row['거래량평균%']) >= volume_range[0] and
+                    int(row['거래량평균%']) <= volume_range[1] and
+                    float(row['유보율']) >= reserve_ratio and
+                    float(row['종목 등락률']) >= ratio_range[0] and
+                    float(row['종목 등락률']) <= ratio_range[1] and
+                    float(row['5일 평균거래량']) >= volume_avg and
+                    float(row['시가총액']) >= market_cap[0] and
+                    float(row['시가총액']) <= market_cap[1] and
+                    float(row['부채비율']) <= debt_ratio]
+
+    sorted_rows = sorted(filtered_rows, key=lambda x: x[order_by], reverse=(order == 'desc'))
+    
+    for row in sorted_rows:
+        row['M1'] = 'O' if any(obj['주도주 1순위'] == row['종목명'] for obj in ABC[0]['data']) else ''
+        row['M2'] = 'O' if any(obj['주도주 2순위'] == row['종목명'] for obj in ABC[1]['data']) else ''
+    
+    return sorted_rows
+
+@router.post('/getStocks', response_class=JSONResponse)
+async def GetStocks( request:Request ):
+    req_data = await request.json() # post로 받은 데이터
+
+    volumeRange = req_data['volumeRange']
+    reserveRatio = req_data['reserveRatio']
+    ratioRange = req_data['ratioRange']
+    volumeAvg = req_data['volumeAvg']
+    marketCap = req_data['marketCap']
+    debtRatio = req_data['debtRatio']
+
+    try :
+        # 업종순위
+        col = client['Industry']['Rank']
+        data = pd.DataFrame(col.find({},{'_id' :0, '전체' : 0, '상승' : 0, '보합' : 0, '하락' : 0, '등락그래프' : 0, '상승%' : 0, '순위' : 0}))
+        
+        col2 = client['Info']['IndustryThemes']
+        # col2 = client['ABC']['stockSectorsThemes']
+        data2 = pd.DataFrame(col2.find({},{'_id' :0}))
+        
+        # 조건명 업종이 전일대비 등락률 0% 이상
+        data = data[data['전일대비'] > 0]
+        filtered_df = data2[data2['업종명'].isin(data['업종명'])]
+
+        # M1-M2 Table
+        col = client.ABC.themeBySecByItem
+        ABC = list(col.find({},{'_id' : 0}))
+        
+        col = client.ABC.stockPrice
+        df = pd.DataFrame(col.find({},{'_id' : 0}))
+        volumeMin = int(min(df['거래량평균%']))
+        volumeMax = int(max(df['거래량평균%']))+10
+        if volumeRange[1] == 0 :
+            volumeRange = [volumeMin, volumeMax]
+            
+        tmp = filtered_rows(df.to_dict(orient='records'), volumeRange, reserveRatio, ratioRange, volumeAvg, marketCap, debtRatio, 'desc', '종목 등락률', ABC)
+        tmp_df = pd.DataFrame(tmp)
+        
+        tableM1M2 = tmp_df[['M1', 'M2', '업종명', '종목명', '종목 등락률', '전일대비거래량', '종목코드', '테마명']].copy()
+        tableM1M2['id'] = tableM1M2.index
+        tableM1M2['인기'] = ''
+        
+        result = {
+            'volumeMin' : volumeMin,
+            'volumeMax' : volumeMax,
+            # 'volumeRange' : volumeRange,
+            'tableM1M2' : tableM1M2.to_dict(orient='records'),
+            'tableM1M2Themes' : 상위10개테마추출(tmp_df),
+            'industryTop10' : 상위10개테마추출(filtered_df),
+        }
+        return result 
+    
+    except Exception as e:
+        return {"error" : str(e)}
+    
+@router.get('/findThemeStocks')
+async def FindThemeStocks( name : str ):
+    try :
+        col = client.Info.ThemeStocks
+        테마_df = pd.DataFrame(col.find({"테마명" : name},{'_id' : 0}))[['종목명', '종목코드']]
+
+        col = client.Info.StockPriceDaily
+        가격_df = pd.DataFrame(col.find({},{'_id' : 0, '종목코드':1,'업종명':1,'등락률':1,'전일대비거래량':1}))
+        # tmp = 테마_df[테마_df['테마명'] == name][['종목명', '종목코드']]
+        merge = pd.merge(테마_df, 가격_df, on='종목코드', how='left')
+        result = merge.sort_values(by=['등락률'], ascending=False)
+        result['id'] = [i for i in range(len(result.index))]
+        
+        return result.to_dict(orient='records')
+    
+    except Exception as e:
+        return {"error" : str(e)}
+
+@router.get('/findIndustryStocks')
+async def FindIndustryStocks( name : str ):
+    try :
+        col = client.Info.IndustryStocks
+        업종_df = pd.DataFrame(col.find({'업종명' : name},{'_id' : 0}))[['종목명', '종목코드']]
+
+        col = client.Info.StockPriceDaily
+        가격_df = pd.DataFrame(col.find({},{'_id' : 0, '종목코드':1,'업종명':1,'등락률':1,'전일대비거래량':1}))
+
+        # tmp = 업종_df[업종_df['업종명'] == name][['종목명', '종목코드']]
+        merge = pd.merge(업종_df, 가격_df, on='종목코드', how='left')
+        result = merge.sort_values(by=['등락률'], ascending=False)
+        result['id'] = [i for i in range(len(result.index))]
+        
+        return result.to_dict(orient='records')
+    
     except Exception as e:
         return {"error" : str(e)}
