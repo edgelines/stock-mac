@@ -247,35 +247,35 @@ async def Search():
         업종_count = 업종_count.merge(base.IndustryRank[['업종명', '순위']], on='업종명', how='left')
         흑자기업수 = list(set( base.data['흑자_영업이익'] + base.data['흑자_당기순이익'] ))
 
-        매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년_해당년도_매출'], '매출')
-        영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년_해당년도_영업이익'], '영업이익')
-        당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년_해당년도_당기순이익'], '당기순이익')
-        전분기대비_매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기매출'], '분기매출')
-        전분기대비_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기영업이익'], '분기영업이익')
-        전분기대비_당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기당기순이익'], '분기당기순이익')
+        집계_매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년_해당년도_매출'], '집계_매출')
+        집계_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년_해당년도_영업이익'], '집계_영업이익')
+        집계_당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년_해당년도_당기순이익'], '집계_당기순이익')
+        분기_매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기_매출'], '분기_매출')
+        분기_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기_영업이익'], '분기_영업이익')
+        분기_당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기_당기순이익'], '분기_당기순이익')
         
         흑자_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['흑자_영업이익'], '흑자_영업이익')
         흑자_당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['흑자_당기순이익'], '흑자_당기순이익')
         흑자기업수 = get_매출_영업이익_순이익_증감수(base.Industry, 흑자기업수, '흑자기업')
-        잠정실적 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['추정'], '잠정실적')
-        전년동분기대비 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년동분기비교'], '전년동분기대비')
+        미집계 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['추정'], '미집계')
+        전년동분기대비 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년동분기대비'], '전년동분기대비')
 
         industry = base.Industry.drop(columns=['종목명', '종목코드'], axis=1).drop_duplicates(subset='업종명', keep='first').reset_index(drop=True)
         industry = industry[industry['업종명'] != '기타']
 
-        dfs = [ industry,업종_count, 매출, 영업이익, 당기순이익, 전분기대비_매출, 전분기대비_영업이익, 전분기대비_당기순이익, 흑자_영업이익, 흑자_당기순이익, 잠정실적, 전년동분기대비, 흑자기업수 ]
+        dfs = [ industry,업종_count, 집계_매출, 집계_영업이익, 집계_당기순이익, 분기_매출, 분기_영업이익, 분기_당기순이익, 흑자_영업이익, 흑자_당기순이익, 미집계, 전년동분기대비, 흑자기업수 ]
         industry = reduce(lambda left, right: pd.merge(left, right, on='업종명', how='left'), dfs)
 
         industry = industry.fillna(0)
         industry['순이익기업'] = round(industry['흑자기업'] / industry['전체종목수'] * 100, 0)
 
-        cols = ['매출', '영업이익', '당기순이익', '분기매출', '분기영업이익', '분기당기순이익', '흑자_영업이익', '흑자_당기순이익', '잠정실적', '전년동분기대비', '순이익기업', '흑자기업']
+        cols = ['집계_매출', '집계_영업이익', '집계_당기순이익', '분기_매출', '분기_영업이익', '분기_당기순이익', '흑자_영업이익', '흑자_당기순이익', '미집계', '전년동분기대비', '순이익기업', '흑자기업']
         for col in cols :
             industry[col] = industry[col].apply(pd.to_numeric, errors = 'coerce').fillna(0)
             industry[col] = industry[col].astype(int)
 
         industry = industry[industry['전체종목수'] > 1 ]
-        industry.reset_index(drop=True)
+        industry = industry.reset_index(drop=True)
         industry['id'] = industry.index
         return industry.to_dict('records')
     except Exception as e:
