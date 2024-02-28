@@ -82,8 +82,35 @@ async def StockEtcInfo(code):
         
         col = client.Info.StockPriceDaily
         df_pri = pd.DataFrame(col.find({"종목코드":code},{'_id' : 0, '종목코드':1, '현재가' : 1}))
+        
+        col = client.Info.StockThemes
+        df_themes = pd.DataFrame(col.find({"종목코드":code},{'_id' : 0, '종목코드':1, '테마명' : 1}))
+
+        col = client['Info']['IpoPulse']
+        IpoPulse = pd.DataFrame(col.find({ "종목코드":code },{'_id':0, '종목코드':1, '보호예수' : 1 }))
 
         df = df_base.merge(df_fin, on='종목코드').merge(df_com, on='종목코드').merge(df_pri, on='종목코드')
+        if '보호예수' in list(IpoPulse.columns) :    
+            df = df.merge(IpoPulse, on='종목코드')
+        else : 
+            df['보호예수'] = ''
+        
+        if len(df_themes) > 0 :
+            df = df.merge(df_themes, on='종목코드')
+        else :
+            df['테마명'] = ''
+
+        col = client.Schedule.StockEvent
+        StockEvent = list(col.find({"종목코드":code},{'_id':0}))
+        filtered_data = [item for item in StockEvent if df['종목명'][0] in item['item']]
+        if len(filtered_data)>0 :
+            _text = ''
+            for row in filtered_data :
+                _text += f"{row['event']}, " 
+            df['이벤트'] = _text[:-2]
+        else :
+            df['이벤트'] = ''
+        
         return df.to_dict(orient='records')[0]
     except Exception as e:
         logging.error(e)

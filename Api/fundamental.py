@@ -16,17 +16,6 @@ logging.basicConfig(level=logging.INFO)
 router = APIRouter()
 client = pymongo.MongoClient(host=['192.168.0.3:27017'])
 
-# def 날짜전처리(df):
-#     df['날짜'] = pd.to_datetime(df['날짜']).astype('int64') // 10**6
-#     return df.to_dict(orient='split')['data']
-
-# def 저가지수(origin_df, num, 가격기준) :
-#     df = origin_df.copy()
-#     df[f'ema{num}'] = ta.EMA(df[가격기준], timeperiod=num)
-#     df = df.drop(labels=가격기준, axis=1)
-#     df = df.dropna()
-#     return tools.날짜전처리(df)
-
 @router.get('/crypto')
 async def Crypto():
     try :
@@ -446,6 +435,16 @@ async def InterestRate():
             'IORB' : tools.날짜전처리(IORB)
         }
         return result
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+
+@router.get('/FOMC_clock')
+async def FOMC_clock():
+    try:
+        col = client.Schedule.FOMC_clock
+        return list(col.find({}, {'_id':False}))
+
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})

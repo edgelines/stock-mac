@@ -156,7 +156,6 @@ async def DayGr():
 # CallPutPage 오른쪽 상단 Chart
 @router.get('/ElwRatioData')
 async def ElwRatioData():
-    # result = client['AoX']['ElwRatioData']
     result = client['ELW']['ElwRatioData']
     data = pd.DataFrame(result.find({}, {'_id':0}).sort([('날짜', -1)]).limit(8))
     data=data.sort_values(by='날짜')
@@ -187,7 +186,9 @@ async def ElwRatioData():
 async def loadDB(name):
     try :
         col = client['ELW'][name]
-        return list(col.find({}, {'_id':False}))
+        data = pd.DataFrame(col.find({},{'_id':0}))
+        data = data.fillna(0)
+        return data.to_dict(orient='records')
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})

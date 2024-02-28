@@ -69,6 +69,7 @@ async def Kospi200(name):
         df['날짜'] = pd.to_datetime(df['날짜'])
         df.sort_values(by='날짜', inplace=True)
         df = df.reset_index(drop=True)
+        df = df[['날짜', '시가', '고가', '저가', '종가']]
         return tools.날짜전처리(df)
     except Exception as e:
         logging.error(e)

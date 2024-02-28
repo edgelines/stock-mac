@@ -14,6 +14,32 @@ logging.basicConfig(level=logging.INFO)
 router = APIRouter()
 client = pymongo.MongoClient(host=['192.168.0.3:27017'])
 
+def 자사주_취득처분(col, code, 취득처분) :
+    data = pd.DataFrame(col.find({"종목코드" : code, '취득처분' : 취득처분},{'_id' : 0, '거래일':1}))
+    
+    result = []
+    if len(data) > 0 :
+        data['거래일'] = pd.to_datetime(data['거래일']).astype('int64')//10**6    
+        datetime = data.to_dict(orient='records')    
+        
+        color = 'red'
+        if 취득처분 == '처분' :
+            color = 'dodgerblue'
+        for data in datetime :
+            add = {
+                'color': color, 
+                    'width': 2, 
+                    'value': data['거래일'], 
+                    'label': {
+                        'text': f'자사주<br/>{취득처분}',
+                        'rotation': 0,
+                        'y': -3,
+                        'x': -6,
+                    }
+            }
+            result.append(add)
+    return result
+
 @router.get('/get/{code}')
 async def getStockChartData(code, days=200) :
     try :
@@ -36,7 +62,11 @@ async def getStockChartData(code, days=200) :
                 df = pd.DataFrame(data_list[1:], columns=data_list[0])
                 stock = df[['날짜', '시가','고가','저가','종가']]
                 volume = df[['날짜', '거래량']]
-                result = { 'price' : tools.날짜전처리(stock), 'volume' : tools.날짜전처리(volume) }
+
+                col = client.AoX.TreasuryStock
+                취득 = 자사주_취득처분(col, code, '취득')
+                처분 = 자사주_취득처분(col, code, '처분')
+                result = { 'price' : tools.날짜전처리(stock), 'volume' : tools.날짜전처리(volume), 'treasury' : 취득+처분 }
                 return result
 
     except Exception as e:

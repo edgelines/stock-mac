@@ -28,8 +28,8 @@ async def Weather( limit : int = 37 ):
     data = data.sort_values(by='날짜')    
     최저, 최고, 날짜 = [], [], []
     눈 = ['눈', '폭설']
-    비 = ['비', '뇌우']
-    요일 = ['일', '월', '화', '수', '목', '금', '토']
+    비 = ['비', '뇌우', '소나기']
+    요일 = ['월', '화', '수', '목', '금', '토', '일']
     for _, row in data.iterrows():
         if any(keyword in row['예보'] for keyword in 비 ) :
             최고.append({ 'y' : int(row['최고']),  'marker': { 'symbol' : 'url(/icon/rainy.png)' }})

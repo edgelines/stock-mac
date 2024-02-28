@@ -69,15 +69,18 @@ class HTS:
     def get_date(self, date):
         start_time = datetime.now()
         current_time = start_time.time()
+        # print('HTS>get_date :', current_time)
         yyyy = date[0:4]
         mm = date[5:7]
         dd = date[8:10]
 
-        tmp_date = datetime(int(yyyy), int(mm), int(dd), 0, 0, 0, 0) - timedelta(1)
-        if is_business_day(tmp_date, self.holiday_list) & (current_time > dt_time(9,30)) :
+        tmp_date = datetime(int(yyyy), int(mm), int(dd), 0, 0, 0, 0)
+        if is_business_day(tmp_date, self.holiday_list) & (current_time > dt_time(9,40)) :
             return date
         else :
+            tmp_date = datetime(int(yyyy), int(mm), int(dd), 0, 0, 0, 0) - timedelta(1)
             yesterday = find_previous_business_day(tmp_date, self.holiday_list)
+            # print('Yesterday :', yesterday)
             return yesterday.strftime('%Y-%m-%d')
     
     def get_dataframe(self, name, query, columnsName):
@@ -191,7 +194,7 @@ class HTS:
             df1['연속거래일'] = df1['연속거래일'] +1
             df2['연속거래일'] = df2['연속거래일'] +1
             if len(df3) > 0 :
-                df3['연속거래일'] = df2['연속거래일'] +1
+                df3['연속거래일'] = df3['연속거래일'] +1
                 
         return {'df1' : df1, 'df2' : df2, 'df3' : df3}
 
@@ -268,9 +271,9 @@ async def FindData(req : Request):
         name = req_data['name']
         market = req_data['market']
         
-        print( typ, split, name, market)
         date = datetime.strptime(req_data['date'], '%Y-%m-%d')
         date = find_previous_business_day(date, holiday_list)
+        # print( datetime.today().strftime('%y-%m-%d %H:%M:%S'), date, typ, split, name, market)
         
         if req_data['time'] == 'null' :
             time = None
@@ -284,7 +287,7 @@ async def FindData(req : Request):
                 df2 = data['df2'][(data['df2']['기관계'] > 300) | (data['df2']['투신'] > 300) | (data['df2']['보험기타금융'] > 300) |(data['df2']['연기금'] > 300) |(data['df2']['기타법인'] > 300) ]
                 df3 = data['df3'][(data['df3']['외국인'] > 300) & (data['df3']['기관계'] > 300) ]
                 
-                result = client['AoX']['lowSectorsRankDfTop3']
+                result = client['Industry']['LowRankTableTop3']
                 data = pd.DataFrame(result.find({}, {'_id':0}).sort([('날짜', -1)]).limit(3))
                 data=data.sort_values(by='날짜')
                 find_list=[]
@@ -314,13 +317,13 @@ async def FindData(req : Request):
                     
                 else : 
                     result = {
-                    'df1' : data['df1'].to_dict(orient='records'),
-                    'df2' : data['df2'].to_dict(orient='records'),
+                    'df1' : df1.to_dict(orient='records'),
+                    'df2' : df2.to_dict(orient='records'),
                     'df3' : [],
                     'industry' : countIndustry(df1, df2, df3),
                     'themes' : countThemes(df1, df2, df3),
-                    'statistics' : [statistics(data['df1']), statistics(data['df2']), statistics(data['df3'])],
-                    'consecutive': getConsecutiveTradingDay(data['df1'], data['df2'], data['df3'])
+                    'statistics' : [statistics(df1), statistics(df2), statistics(df3)],
+                    'consecutive': getConsecutiveTradingDay(df1, df2, df3)
                     }
 
             else :
@@ -473,7 +476,8 @@ async def FindData(req : Request):
                 df2 = df2.sort_values(by=['연속거래일', '기관계', '투신', '연기금'], ascending=[True, False, False, False])
                 df3 = df3.sort_values(by=['연속거래일', '외국인', '기관계'], ascending=[True, False, False])
             except Exception as e:
-                print('sort_value > ', e)
+                pass
+                # print('sort_value > ', e)
             if typ == 'null' :
                 df1['id'] = df1.index
                 df2['id'] = df2.index

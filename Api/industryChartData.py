@@ -78,7 +78,7 @@ async def GetThemes( request:Request ):
     종목등락률=1
     추출테마수=10
     try :
-        col = client.AoX.stockSectorsGR
+        col = client.Industry.SectorsGR
         raw_data = list(col.find({}, {'_id': 0}))
 
         # 클라이언트 측에서 예상하는 데이터 구조로 변환

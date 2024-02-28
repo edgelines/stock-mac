@@ -25,6 +25,26 @@ async def stockSectors():
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
+@router.get('/LowRankTableTop3')
+async def LowRankTableTop3():
+    try :
+        col = client['Industry']['LowRankTableTop3']
+        data = pd.DataFrame(col.find({}, {'_id':False}).sort([('날짜', -1)]).limit(3))
+        data=data.sort_values(by='날짜')
+        return data.to_dict(orient='records')
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+
+@router.get('/{name}')
+async def loadDB(name):
+    try :
+        col = client['Industry'][name]
+        return list(col.find({}, {'_id':False}))
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+
 # @router.get("/themeBySecByItem")
 # async def themeBySecByItem():
 #     result = client['ABC']['themeBySecByItem']
