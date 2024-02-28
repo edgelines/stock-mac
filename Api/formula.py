@@ -290,14 +290,14 @@ async def FindData(req : Request):
         target_category = req_data['target_category']
         target_industry = req_data['target_industry']
         WillR = req_data['WillR']
-        print(target_category, target_industry)
+        # print(target_category, target_industry)
         if WillR == 'X' :
             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
         else : 
             get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
         get_data = get_data.fillna(0)
         get_data['id'] = get_data.index
-        print(get_data, get_data.info(), get_data.to_dict(orient='records'))
+        # print(get_data, get_data.info(), get_data.to_dict(orient='records'))
         return get_data.to_dict(orient='records')
 
     except Exception as e:
