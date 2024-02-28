@@ -111,6 +111,10 @@ class SearchFinancial:
         # 이벤트
         col = client.Schedule.StockEvent
         self.StockEvent = list(col.find({},{'_id':0}))
+        
+        # 업종순위
+        col = client.Industry.Rank
+        self.IndustryRank = pd.DataFrame(col.find({}, {'_id':0, '전일대비':1, '순위':1}))
 
     def willR(self, stock_code):
         
@@ -240,7 +244,7 @@ async def Search():
         base = SearchFinancial()
         업종_count = base.Industry.groupby(by='업종명').count().reset_index().drop(columns='종목명', axis=1)
         업종_count.columns=['업종명', '전체종목수']
-
+        업종_count = 업종_count.merge(base.IndustryRank[['업종명', '순위']], on='업종명', how='left')
         흑자기업수 = list(set( base.data['흑자_영업이익'] + base.data['흑자_당기순이익'] ))
 
         매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년_해당년도_매출'], '매출')
