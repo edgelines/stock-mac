@@ -114,7 +114,7 @@ class SearchFinancial:
         
         # 업종순위
         col = client.Industry.Rank
-        self.IndustryRank = pd.DataFrame(col.find({}, {'_id':0, '전일대비':1, '순위':1}))
+        self.IndustryRank = pd.DataFrame(col.find({}, {'_id':0, '업종명':1, '전일대비':1, '순위':1}))
 
     def willR(self, stock_code):
         
