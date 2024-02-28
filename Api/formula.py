@@ -143,7 +143,7 @@ class SearchFinancial:
     # 종목명에 해당하는 이벤트를 찾아서 '이벤트' 컬럼에 추가하기 위한 함수 정의
     def find_events_for_stock(self, stock_name):
         # 종목명에 해당하는 이벤트를 필터링
-        filtered_events = [event for event in self.StockEvent if event['item'] in stock_name]
+        filtered_events = [event for event in self.StockEvent if event['item'] == stock_name]
         # 필터링된 이벤트가 있으면 이벤트 정보를 문자열로 반환, 없으면 빈 문자열 반환
         if filtered_events:
             return ', '.join([event['event'] for event in filtered_events])
