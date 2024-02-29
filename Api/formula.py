@@ -308,7 +308,7 @@ def preprocessing_코스피_코스닥_업종갯수(df, 구분='Kospi', columns=[
     return df
 
 @router.get('/searchFinancial/market')
-async def Search():
+async def Search_market():
     try :
         base = SearchFinancial()
         
@@ -336,7 +336,7 @@ async def Search():
             'Kosdaq_total' : 코스닥['전체종목수'].sum(),
             'Kosdaq_profitable' : 코스닥['흑자기업'].sum(),
         }
-                        
+        print(result)
         return result
     except Exception as e:
         logging.error(e)
