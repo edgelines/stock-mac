@@ -307,40 +307,40 @@ def preprocessing_코스피_코스닥_업종갯수(df, 구분='Kospi', columns=[
     df.columns=columns
     return df
 
-@router.get('/searchFinancial_market')
+@router.get('/searchMarket')
 async def Search_market():
-    # try :
-    base = SearchFinancial()
-    
-    업종_count = base.Industry.copy()
-    업종_count['시장'] = 업종_count['종목코드'].apply(base.find_market_name)
+    try :
+        base = SearchFinancial()
+        
+        업종_count = base.Industry.copy()
+        업종_count['시장'] = 업종_count['종목코드'].apply(base.find_market_name)
 
-    코스피_전체 = preprocessing_코스피_코스닥_업종갯수(업종_count, 'Kospi')
-    코스닥_전체 = preprocessing_코스피_코스닥_업종갯수(업종_count, 'Kosdaq')
+        코스피_전체 = preprocessing_코스피_코스닥_업종갯수(업종_count, 'Kospi')
+        코스닥_전체 = preprocessing_코스피_코스닥_업종갯수(업종_count, 'Kosdaq')
 
-    df_흑자기업 = pd.DataFrame(base.data['전년_해당년도_매출'], columns=['종목코드'])
-    df_흑자기업['시장'] = df_흑자기업['종목코드'].apply(base.find_market_name)
-    df_흑자기업 = df_흑자기업.merge(base.Industry, on='종목코드', how='left')
+        df_흑자기업 = pd.DataFrame(base.data['전년_해당년도_매출'], columns=['종목코드'])
+        df_흑자기업['시장'] = df_흑자기업['종목코드'].apply(base.find_market_name)
+        df_흑자기업 = df_흑자기업.merge(base.Industry, on='종목코드', how='left')
 
-    코스피_흑자기업 = preprocessing_코스피_코스닥_업종갯수(df_흑자기업, 'Kospi', ['업종명', '흑자기업'])
-    코스닥_흑자기업 = preprocessing_코스피_코스닥_업종갯수(df_흑자기업, 'Kosdaq', ['업종명', '흑자기업'])
+        코스피_흑자기업 = preprocessing_코스피_코스닥_업종갯수(df_흑자기업, 'Kospi', ['업종명', '흑자기업'])
+        코스닥_흑자기업 = preprocessing_코스피_코스닥_업종갯수(df_흑자기업, 'Kosdaq', ['업종명', '흑자기업'])
 
-    코스피 = 코스피_흑자기업.merge(코스피_전체, on='업종명', how='left')
-    코스닥 = 코스닥_흑자기업.merge(코스닥_전체, on='업종명', how='left')
+        코스피 = 코스피_흑자기업.merge(코스피_전체, on='업종명', how='left')
+        코스닥 = 코스닥_흑자기업.merge(코스닥_전체, on='업종명', how='left')
 
-    result = {
-        'Kospi_data' : 코스피.to_dict(orient='records'),
-        'Kospi_total' : 코스피['전체종목수'].sum(),
-        'Kospi_profitable' : 코스피['흑자기업'].sum(),
-        'Kosdaq_data' : 코스닥.to_dict(orient='records'),
-        'Kosdaq_total' : 코스닥['전체종목수'].sum(),
-        'Kosdaq_profitable' : 코스닥['흑자기업'].sum(),
-    }
-    # print(result)
-    return result
-    # except Exception as e:
-    #     logging.error(e)
-    #     return JSONResponse(status_code=500, content={"message": "SearchFinancial Server Error"})
+        result = {
+            'Kospi_data' : 코스피.to_dict(orient='records'),
+            'Kospi_total' : int(코스피['전체종목수'].sum()),
+            'Kospi_profitable' : int(코스피['흑자기업'].sum()),
+            'Kosdaq_data' : 코스닥.to_dict(orient='records'),
+            'Kosdaq_total' : int(코스닥['전체종목수'].sum()),
+            'Kosdaq_profitable' : int(코스닥['흑자기업'].sum()),
+        }
+        # print(result)
+        return result
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "SearchFinancial Server Error"})
     
 @router.post('/findData', response_class=JSONResponse)
 async def FindData(req : Request):
