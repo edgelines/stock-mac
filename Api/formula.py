@@ -96,7 +96,7 @@ class SearchFinancial:
         
         # PER, PBR
         col = client.Info.StockEtcInfo
-        self.StockEtcInfo = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, 'PER' :1, 'PBR' :1}))
+        self.StockEtcInfo = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, 'PER' :1, 'PBR' :1 }))
         
         # 종목별 재무제표 + 유보율, 부채비율
         col = client.Info.Financial
@@ -116,6 +116,10 @@ class SearchFinancial:
         col = client.Industry.Rank
         self.IndustryRank = pd.DataFrame(col.find({}, {'_id':0, '업종명':1, '전일대비':1, '순위':1}))
 
+        # 코스피/코스닥
+        col = client.Info.MarketList
+        self.MarketList = list(col.find({},{'_id':0}))[0]
+        
     def willR(self, stock_code):
         
         redis_client = redis.Redis(host='192.168.0.3', port=6379, db=0)
@@ -140,8 +144,15 @@ class SearchFinancial:
             'WillR33' : WillR33,
         } 
     
-    # 종목명에 해당하는 이벤트를 찾아서 '이벤트' 컬럼에 추가하기 위한 함수 정의
     def find_events_for_stock(self, stock_name):
+        """종목명에 해당하는 이벤트를 찾아서 '이벤트' 컬럼에 추가하기 위한 함수 정의
+
+        Args:
+            stock_name (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         # 종목명에 해당하는 이벤트를 필터링
         filtered_events = [event for event in self.StockEvent if event['item'] == stock_name]
         # 필터링된 이벤트가 있으면 이벤트 정보를 문자열로 반환, 없으면 빈 문자열 반환
@@ -150,36 +161,42 @@ class SearchFinancial:
         else:
             return ''
     
+    def find_market_name(self, code):
+        if code in self.MarketList['코스피'] :
+            return 'Kospi'
+        else :
+            return 'Kosdaq'
+    
     def get_category_industry(self, target_category=None, target_industry=None):
-        분기매출 = self.data['분기매출']
-        분기영업이익 = self.data['분기영업이익']
-        분기당기순이익 = self.data['분기당기순이익']
+        분기매출 = self.data['분기_매출']
+        분기영업이익 = self.data['분기_영업이익']
+        분기당기순이익 = self.data['분기_당기순이익']
         추정 = self.data['추정']
-        전년동분기비교 = self.data['전년동분기비교']
+        전년동분기대비 = self.data['전년동분기대비']
         
         흑자_영업이익 = self.data['흑자_영업이익']
         흑자_당기순이익 = self.data['흑자_당기순이익']
-        전년_해당년도_매출 = self.data['전년_해당년도_매출']
-        전년_해당년도_영업이익 = self.data['전년_해당년도_영업이익']
-        전년_해당년도_당기순이익 = self.data['전년_해당년도_당기순이익']
+        전년_해당년도_매출 = self.data['집계_매출']
+        전년_해당년도_영업이익 = self.data['집계_영업이익']
+        전년_해당년도_당기순이익 = self.data['집계_당기순이익']
         
         종목리스트 = []
         if target_category is None :
-            종목리스트 += 분기매출+분기영업이익+분기당기순이익+추정+전년동분기비교+흑자_영업이익+흑자_당기순이익+전년_해당년도_매출+전년_해당년도_영업이익+전년_해당년도_당기순이익
+            종목리스트 += 분기매출+분기영업이익+분기당기순이익+추정+전년동분기대비+흑자_영업이익+흑자_당기순이익+전년_해당년도_매출+전년_해당년도_영업이익+전년_해당년도_당기순이익
         else :
             for cate in target_category:
-                if cate == '매출' :
+                if cate == '집계_매출' :
                     종목리스트 += 전년_해당년도_매출
-                elif cate == '영업이익' :
+                elif cate == '집계_영업이익' :
                     종목리스트 += 전년_해당년도_영업이익
-                elif cate == '당기순이익' :
+                elif cate == '집계_당기순이익' :
                     종목리스트 += 전년_해당년도_당기순이익
                 elif cate == '흑자기업' :
                     종목리스트 += 흑자_영업이익+흑자_당기순이익
                 elif cate == '잠정실적' :
                     종목리스트 += 추정
                 elif cate == '전년동분기대비' :
-                    종목리스트 += 전년동분기비교
+                    종목리스트 += 전년동분기대비
                 else : 
                     종목리스트 += self.data[cate]
         # if target_category == None :
@@ -207,6 +224,7 @@ class SearchFinancial:
         종목리스트 = list(set(종목리스트))
         df_raw = df_raw[df_raw['종목코드'].isin(종목리스트)]
         df_raw['이벤트'] = df_raw['종목명'].apply(self.find_events_for_stock)
+        df_raw['시장'] = df_raw['종목코드'].apply(self.find_market_name)
         df_raw = df_raw.merge(self.StockEtcInfo, how='left', on='종목코드').merge(self.Financial, how='left', on='종목코드').merge(self.CompanyOverview, how='left', on='종목코드')
         return df_raw
     
