@@ -300,6 +300,47 @@ async def Search():
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "SearchFinancial Server Error"})
+
+def preprocessing_코스피_코스닥_업종갯수(df, 구분='Kospi', columns=['업종명', '전체종목수']):
+    df = df[df['시장'] == 구분]
+    df = df.groupby(by='업종명').count().reset_index().drop(columns=['종목명', '시장'], axis=1)
+    df.columns=columns
+    return df
+
+@router.get('/searchFinancial/market')
+async def Search():
+    try :
+        base = SearchFinancial()
+        
+        업종_count = base.Industry.copy()
+        업종_count['시장'] = 업종_count['종목코드'].apply(base.find_market_name)
+
+        코스피_전체 = preprocessing_코스피_코스닥_업종갯수(업종_count, 'Kospi')
+        코스닥_전체 = preprocessing_코스피_코스닥_업종갯수(업종_count, 'Kosdaq')
+
+        df_흑자기업 = pd.DataFrame(base.data['전년_해당년도_매출'], columns=['종목코드'])
+        df_흑자기업['시장'] = df_흑자기업['종목코드'].apply(base.find_market_name)
+        df_흑자기업 = df_흑자기업.merge(base.Industry, on='종목코드', how='left')
+
+        코스피_흑자기업 = preprocessing_코스피_코스닥_업종갯수(df_흑자기업, 'Kospi', ['업종명', '흑자기업'])
+        코스닥_흑자기업 = preprocessing_코스피_코스닥_업종갯수(df_흑자기업, 'Kosdaq', ['업종명', '흑자기업'])
+
+        코스피 = 코스피_흑자기업.merge(코스피_전체, on='업종명', how='left')
+        코스닥 = 코스닥_흑자기업.merge(코스닥_전체, on='업종명', how='left')
+
+        result = {
+            'Kospi_data' : 코스피.to_dict(orient='records'),
+            'Kospi_total' : 코스피['전체종목수'].sum(),
+            'Kospi_profitable' : 코스피['흑자기업'].sum(),
+            'Kosdaq_data' : 코스닥.to_dict(orient='records'),
+            'Kosdaq_total' : 코스닥['전체종목수'].sum(),
+            'Kosdaq_profitable' : 코스닥['흑자기업'].sum(),
+        }
+                        
+        return result.to_dict('records')
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "SearchFinancial Server Error"})
     
 @router.post('/findData', response_class=JSONResponse)
 async def FindData(req : Request):
