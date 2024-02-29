@@ -225,6 +225,8 @@ class SearchFinancial:
         df_raw = df_raw[df_raw['종목코드'].isin(종목리스트)]
         df_raw['이벤트'] = df_raw['종목명'].apply(self.find_events_for_stock)
         df_raw = df_raw.merge(self.StockEtcInfo, how='left', on='종목코드').merge(self.Financial, how='left', on='종목코드').merge(self.CompanyOverview, how='left', on='종목코드')
+        df_raw['시장'] = df_raw['종목코드'].apply(self.find_market_name)
+        
         return df_raw
     
     def get_category_industry_with_willR(self, target_category=None, target_industry=None):
@@ -350,11 +352,16 @@ async def FindData(req : Request):
         target_category = req_data['target_category']
         target_industry = req_data['target_industry']
         WillR = req_data['WillR']
+        market = req_data['market']
         # print(target_category, target_industry)
         if WillR == 'X' :
             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
         else : 
             get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
+        
+        if market != None :
+            get_data = get_data[get_data['시장'] == market]
+        
         get_data = get_data.fillna(0)
         get_data['id'] = get_data.index
         # print(get_data, get_data.info(), get_data.to_dict(orient='records'))
