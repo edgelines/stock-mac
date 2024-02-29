@@ -387,13 +387,13 @@ async def FindData(req : Request):
         
         종목리스트 = []
         for cate in target_category:
-            if cate in ['매출', '영업이익', '당기순이익'] :
-                종목리스트 += financial_growth['분기실적']+financial_growth['전년도연간실적']
+            if cate in ['집계_매출', '집계_영업이익', '집계_당기순이익'] :
+                종목리스트 += financial_growth['전년도연간실적']
             
-            elif cate in ['흑자_매출', '흑자_영업이익', '흑자_당기순이익'] :
+            elif cate in ['흑자_영업이익', '흑자_당기순이익'] :
                 종목리스트 += financial_growth['흑자']
             
-            elif cate in ['분기매출', '분기영업이익', '분기당기순이익'] :
+            elif cate in ['분기_매출', '분기_영업이익', '분기_당기순이익'] :
                 종목리스트 += financial_growth['분기실적']
             
             else : 
