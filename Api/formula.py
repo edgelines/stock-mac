@@ -193,7 +193,7 @@ class SearchFinancial:
                     종목리스트 += 전년_해당년도_당기순이익
                 elif cate == '흑자기업' :
                     종목리스트 += 흑자_영업이익+흑자_당기순이익
-                elif cate == '잠정실적' :
+                elif cate == '미집계' :
                     종목리스트 += 추정
                 elif cate == '전년동분기대비' :
                     종목리스트 += 전년동분기대비
@@ -224,7 +224,6 @@ class SearchFinancial:
         종목리스트 = list(set(종목리스트))
         df_raw = df_raw[df_raw['종목코드'].isin(종목리스트)]
         df_raw['이벤트'] = df_raw['종목명'].apply(self.find_events_for_stock)
-        df_raw['시장'] = df_raw['종목코드'].apply(self.find_market_name)
         df_raw = df_raw.merge(self.StockEtcInfo, how='left', on='종목코드').merge(self.Financial, how='left', on='종목코드').merge(self.CompanyOverview, how='left', on='종목코드')
         return df_raw
     
@@ -295,6 +294,8 @@ async def Search():
         industry = industry[industry['전체종목수'] > 1 ]
         industry = industry.reset_index(drop=True)
         industry['id'] = industry.index
+        
+                
         return industry.to_dict('records')
     except Exception as e:
         logging.error(e)
