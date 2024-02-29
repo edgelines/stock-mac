@@ -337,7 +337,7 @@ async def Search():
             'Kosdaq_profitable' : 코스닥['흑자기업'].sum(),
         }
                         
-        return result.to_dict(orient='records')
+        return result
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "SearchFinancial Server Error"})
