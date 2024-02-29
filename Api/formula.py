@@ -385,19 +385,20 @@ async def FindData(req : Request):
         col = client.Info.FinancialGrowth
         financial_growth = list(col.find({},{'_id':0}))[0]
         
-        종목리스트 = []
-        for cate in target_category:
-            if cate in ['집계_매출', '집계_영업이익', '집계_당기순이익'] :
-                종목리스트 += financial_growth['전년도연간실적']
+        # 종목리스트 = []
+        # for cate in target_category:
+        #     if cate in ['집계_매출', '집계_영업이익', '집계_당기순이익'] :
+        #         종목리스트 += financial_growth['전년도연간실적']
             
-            elif cate in ['흑자_영업이익', '흑자_당기순이익'] :
-                종목리스트 += financial_growth['흑자']
+        #     elif cate in ['흑자_영업이익', '흑자_당기순이익'] :
+        #         종목리스트 += financial_growth['흑자']
             
-            elif cate in ['분기_매출', '분기_영업이익', '분기_당기순이익'] :
-                종목리스트 += financial_growth['분기실적']
+        #     elif cate in ['분기_매출', '분기_영업이익', '분기_당기순이익'] :
+        #         종목리스트 += financial_growth['분기실적']
             
-            else : 
-                종목리스트 += financial_growth[cate]
+        #     else : 
+        #         종목리스트 += financial_growth[cate]
+        종목리스트 = financial_growth['분기실적'] + financial_growth['흑자']
         stock_df = pd.DataFrame(종목리스트)
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
 
