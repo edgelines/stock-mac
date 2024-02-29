@@ -307,7 +307,7 @@ def preprocessing_코스피_코스닥_업종갯수(df, 구분='Kospi', columns=[
     df.columns=columns
     return df
 
-@router.get('/searchFinancial/market')
+@router.get('/searchFinancial_market')
 async def Search_market():
     try :
         base = SearchFinancial()
