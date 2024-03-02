@@ -272,9 +272,9 @@ async def Search():
         업종_count = 업종_count.merge(base.IndustryRank, on='업종명', how='left')
         흑자기업수 = list(set( base.data['흑자_영업이익'] + base.data['흑자_당기순이익'] ))
 
-        집계_매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년_해당년도_매출'], '집계_매출')
-        집계_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년_해당년도_영업이익'], '집계_영업이익')
-        집계_당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년_해당년도_당기순이익'], '집계_당기순이익')
+        집계_매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['집계_매출'], '집계_매출')
+        집계_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['집계_영업이익'], '집계_영업이익')
+        집계_당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['집계_당기순이익'], '집계_당기순이익')
         분기_매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기_매출'], '분기_매출')
         분기_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기_영업이익'], '분기_영업이익')
         분기_당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기_당기순이익'], '분기_당기순이익')
