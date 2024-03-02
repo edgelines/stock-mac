@@ -383,8 +383,16 @@ async def FindData(req : Request):
     try :
         base = SearchFinancial()
         req_data = await req.json()
-        target_category = req_data['target_category']
+        # target_category = req_data['target_category']
+        check = req_data['check']
+        cate_1 = req_data['target_category1']
+        cate_2 = req_data['target_category2']
         target_industry = req_data['target_industry']
+        
+        target_category=[]
+        for item1 in cate_1:
+            for item2 in cate_2:
+                target_category.append(f'{item1}_{item2}')
         
         get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
         
@@ -392,13 +400,10 @@ async def FindData(req : Request):
         financial_growth = list(col.find({},{'_id':0}))[0]
         
         종목리스트 = []
-        for cate in target_category:
+        for cate in cate_1:
             if cate in ['집계'] :
                 종목리스트 += financial_growth['집계']
-            
-            elif cate in ['흑자'] :
-                종목리스트 += financial_growth['흑자']
-            
+                        
             elif cate in ['분기'] :
                 종목리스트 += financial_growth['분기']
             
@@ -407,6 +412,10 @@ async def FindData(req : Request):
             
             else : 
                 pass
+        
+        if check != None :    
+            종목리스트 += financial_growth['흑자']
+        
         # 종목리스트 = financial_growth['분기'] + financial_growth['흑자']
         stock_df = pd.DataFrame(종목리스트)
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
