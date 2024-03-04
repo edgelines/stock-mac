@@ -302,7 +302,8 @@ async def FindData(req : Request):
                     df2 = df2.sort_values(by=['연속거래일', '기관계', '투신', '연기금'], ascending=[True, False, False, False])
                     df3 = df3.sort_values(by=['연속거래일', '외국인', '기관계'], ascending=[True, False, False])
                 except Exception as e:
-                    print('sort_value > ', e)
+                    pass
+                    # print('sort_value > ', e)
 
                 if len(df3) > 0 :
                     result = {
@@ -347,7 +348,9 @@ async def FindData(req : Request):
                 df22 = data['df2'].sort_values(by=['연속거래일', '기관계', '투신', '연기금'], ascending=[True, False, False, False])
                 df33 = data['df3'].sort_values(by=['연속거래일', '외국인', '기관계'], ascending=[True, False, False])
             except Exception as e:
-                print('sort_value > ', e)
+                pass
+                # print('sort_value > ', e)
+                
             if typ == 'null' :
                 if len(df3) > 0 :
                     result = {
@@ -417,7 +420,8 @@ async def FindData(req : Request):
                 df2 = df2.drop_duplicates(subset='종목코드', keep='first').sort_values(by=['연속거래일', '기관계', '투신', '연기금'], ascending=[True, False, False, False])
                 df3 = df3.drop_duplicates(subset='종목코드', keep='first').sort_values(by=['연속거래일', '외국인', '기관계'], ascending=[True, False, False])
             except Exception as e:
-                print('sort_value > ', e)
+                pass
+                # print('sort_value > ', e)
             
             if typ == 'null' :
                 df1['id'] = df1.index
