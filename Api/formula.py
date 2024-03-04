@@ -415,15 +415,13 @@ async def FindData(req : Request):
         
         if check == '흑자' :
             종목리스트 += financial_growth['흑자']
-            print(len(종목리스트))
         else : 
             종목리스트 +=  financial_growth['분기']+ financial_growth['연간']+ financial_growth['미집계']+ financial_growth['전년동분기대비']+ financial_growth['집계']+ financial_growth['흑자']
-            print(len(종목리스트))
         
         # 종목리스트 = financial_growth['분기'] + financial_growth['흑자']
         stock_df = pd.DataFrame(종목리스트)
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
-
+        print(len(stock_df))
         get_data = get_data.merge(stock_df, on='종목코드', how='left').dropna()
         get_data['id'] = get_data.index
         # print(get_data, get_data.info(), get_data.to_dict(orient='records'))
