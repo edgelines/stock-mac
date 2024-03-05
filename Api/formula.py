@@ -395,6 +395,7 @@ async def FindData(req : Request):
         col = client.Info.FinancialGrowth
         financial_growth = list(col.find({},{'_id':0}))[0]
         
+        print(집계, 흑자)
         
         종목리스트 = []
         target_category=[]
