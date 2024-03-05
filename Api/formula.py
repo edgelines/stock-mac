@@ -387,7 +387,7 @@ async def FindData(req : Request):
         집계 = req_data['aggregated']
         흑자 = req_data['surplus']
         
-        check = req_data['check']
+        # check = req_data['check']
         cate_1 = req_data['target_category1']
         cate_2 = req_data['target_category2']
         target_industry = req_data['target_industry']
@@ -395,7 +395,7 @@ async def FindData(req : Request):
         col = client.Info.FinancialGrowth
         financial_growth = list(col.find({},{'_id':0}))[0]
         
-        print(집계, 흑자)
+        # print(집계, 흑자)
         
         종목리스트 = []
         target_category=[]
