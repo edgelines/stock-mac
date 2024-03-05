@@ -419,7 +419,7 @@ async def FindData(req : Request):
             get_data = get_data[get_data['종목코드'].isin(get_check['종목코드'].to_list())]
             
         else : 
-            종목리스트 +=  financial_growth['분기']+ financial_growth['연간']+ financial_growth['미집계']+ financial_growth['전년동분기대비']+ financial_growth['집계']+ financial_growth['흑자']
+            종목리스트 +=  financial_growth['분기']+ financial_growth['연간']+ financial_growth['미집계']+ financial_growth['전년동분기대비']+ financial_growth['가결산']+ financial_growth['흑자']
         
         stock_df = pd.DataFrame(종목리스트)
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
