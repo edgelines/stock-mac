@@ -41,12 +41,12 @@ def 자사주_취득처분(col, code, 취득처분) :
     return result
 
 @router.get('/get/{code}')
-async def getStockChartData(code, days=200) :
+async def getStockChartData(code, days=200, week='day') :
     try :
         today = datetime.today()
         endDate = today.strftime('%Y%m%d')
         startDate = today - timedelta(days=days)
-        url = f'https://api.finance.naver.com/siseJson.naver?symbol={code}&requestType=1&startTime={startDate}&endTime={endDate}&timeframe=day'
+        url = f'https://api.finance.naver.com/siseJson.naver?symbol={code}&requestType=1&startTime={startDate}&endTime={endDate}&timeframe={week}'
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
         }

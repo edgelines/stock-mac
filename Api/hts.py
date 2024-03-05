@@ -402,7 +402,7 @@ async def FindData(req : Request):
             elif split == '당기순이익' :
                 financial_col = '당기순이익'
             
-            q_code_list = financial[0][f'분기{financial_col}']
+            q_code_list = financial[0][f'분기_{financial_col}']
             a_code_list = financial[0][f'연간{financial_col}']
             분기_df1 = data['df1'][data['df1']['종목코드'].isin(q_code_list)]
             분기_df2 = data['df2'][data['df2']['종목코드'].isin(q_code_list)]
