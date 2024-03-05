@@ -384,42 +384,65 @@ async def FindData(req : Request):
         base = SearchFinancial()
         req_data = await req.json()
         # target_category = req_data['target_category']
+        집계 = req_data['aggregated']
+        흑자 = req_data['surplus']
+        
         check = req_data['check']
         cate_1 = req_data['target_category1']
         cate_2 = req_data['target_category2']
         target_industry = req_data['target_industry']
         
-        target_category=[]
-        for item1 in cate_1:
-            for item2 in cate_2:
-                target_category.append(f'{item1}_{item2}')
-        
-        get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
-        
         col = client.Info.FinancialGrowth
         financial_growth = list(col.find({},{'_id':0}))[0]
         
-        종목리스트 = []
-        for cate in cate_1:
-            if cate in ['가결산'] :
-                종목리스트 += financial_growth['가결산']
-                        
-            elif cate in ['분기'] :
-                종목리스트 += financial_growth['분기']
-            
-            elif cate in ['전년동분기대비'] :
-                종목리스트 += financial_growth['전년동분기대비']
-            
-            else : 
-                pass
         
-        if check == '흑자' :
-            종목리스트 += financial_growth['흑자']
-            get_check = base.get_category_industry(target_category=['흑자'], target_industry=target_industry)
-            get_data = get_data[get_data['종목코드'].isin(get_check['종목코드'].to_list())]
+        종목리스트 = []
+        target_category=[]
+        # 집계 일경우
+        if 집계 :
+            for item1 in cate_1:
+                for item2 in cate_2:
+                    target_category.append(f'{item1}_{item2}')
+            get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+            for cate in cate_1:
+                if cate in ['가결산'] :
+                    종목리스트 += financial_growth['가결산']
+                            
+                elif cate in ['분기'] :
+                    종목리스트 += financial_growth['분기']
+                
+                elif cate in ['전년동분기대비'] :
+                    종목리스트 += financial_growth['전년동분기대비']
+
+            if 흑자 :
+                종목리스트 += financial_growth['흑자']
+                get_check = base.get_category_industry(target_category=['흑자'], target_industry=target_industry)
+                get_data = get_data[get_data['종목코드'].isin(get_check['종목코드'].to_list())]
+                
+            else : 
+                종목리스트 +=  financial_growth['분기']+ financial_growth['연간']+ financial_growth['미집계']+ financial_growth['전년동분기대비']+ financial_growth['가결산']+ financial_growth['흑자']
             
-        else : 
-            종목리스트 +=  financial_growth['분기']+ financial_growth['연간']+ financial_growth['미집계']+ financial_growth['전년동분기대비']+ financial_growth['가결산']+ financial_growth['흑자']
+
+        # 미집계 일경우
+        else :
+            if 흑자 :
+                for cate_name in cate_2 :
+                    target_category.append(f'미집계_흑자_{cate_name}')
+            else : 
+                for cate_name in cate_2 :
+                    target_category.append(f'미집계_{cate_name}')
+                    
+            get_data = base.get_category_industry(target_category=['미집계'], target_industry=target_industry)
+            종목리스트 += financial_growth['미집계']
+        
+        
+        # if check == '흑자' :
+        #     종목리스트 += financial_growth['흑자']
+        #     get_check = base.get_category_industry(target_category=['흑자'], target_industry=target_industry)
+        #     get_data = get_data[get_data['종목코드'].isin(get_check['종목코드'].to_list())]
+            
+        # else : 
+        #     종목리스트 +=  financial_growth['분기']+ financial_growth['연간']+ financial_growth['미집계']+ financial_growth['전년동분기대비']+ financial_growth['가결산']+ financial_growth['흑자']
         
         stock_df = pd.DataFrame(종목리스트)
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
