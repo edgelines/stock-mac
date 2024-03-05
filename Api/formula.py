@@ -257,7 +257,7 @@ async def Search():
         업종_count = base.Industry.groupby(by='업종명').count().reset_index().drop(columns='종목명', axis=1)
         업종_count.columns=['업종명', '전체종목수']
         업종_count = 업종_count.merge(base.IndustryRank, on='업종명', how='left')
-        흑자기업수 = list(set( base.data['흑자_영업이익'] + base.data['흑자_당기순이익'] ))
+        흑자기업수 = list(set( base.data['흑자_매출'] + base.data['흑자_영업이익'] + base.data['흑자_당기순이익'] ))
 
         가결산_매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['가결산_매출'], '가결산_매출')
         가결산_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['가결산_영업이익'], '가결산_영업이익')
