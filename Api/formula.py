@@ -174,6 +174,7 @@ class SearchFinancial:
         추정 = self.data['추정']
         전년동분기대비 = self.data['전년동분기대비']
         
+        흑자_매출 = self.data['흑자_매출']
         흑자_영업이익 = self.data['흑자_영업이익']
         흑자_당기순이익 = self.data['흑자_당기순이익']
         전년_해당년도_매출 = self.data['가결산_매출']
@@ -182,7 +183,7 @@ class SearchFinancial:
         
         종목리스트 = []
         if target_category is None :
-            종목리스트 += 분기매출+분기영업이익+분기당기순이익+추정+전년동분기대비+흑자_영업이익+흑자_당기순이익+전년_해당년도_매출+전년_해당년도_영업이익+전년_해당년도_당기순이익
+            종목리스트 += 분기매출+분기영업이익+분기당기순이익+추정+전년동분기대비+흑자_매출+흑자_영업이익+흑자_당기순이익+전년_해당년도_매출+전년_해당년도_영업이익+전년_해당년도_당기순이익
         else :
             for cate in target_category:
                 if cate == '가결산_매출' :
@@ -205,20 +206,6 @@ class SearchFinancial:
                     종목리스트 += 전년동분기대비
                 else : 
                     종목리스트 += self.data[cate]
-        # if target_category == None :
-        #     종목리스트 = 분기매출+분기영업이익+분기당기순이익+추정+전년동분기비교+흑자_매출+흑자_영업이익+흑자_당기순이익+전년_해당년도_매출+전년_해당년도_영업이익+전년_해당년도_당기순이익
-        # elif target_category == '매출' :
-        #     종목리스트 = 분기매출+전년_해당년도_매출
-        # elif target_category == '영업이익' :
-        #     종목리스트 = 분기영업이익+전년_해당년도_영업이익
-        # elif target_category == '당기순이익' :
-        #     종목리스트 = 분기당기순이익+전년_해당년도_당기순이익
-        # elif target_category == '흑자기업' :
-        #     종목리스트 = 흑자_매출+흑자_영업이익+흑자_당기순이익
-        # elif target_category == '잠정실적' :
-        #     종목리스트 = 추정
-        # else : 
-        #     종목리스트 = self.data[target_category]
         
         df_raw = self.Industry
         # if target_industry == '제약' :
@@ -279,22 +266,26 @@ async def Search():
         분기_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기_영업이익'], '분기_영업이익')
         분기_당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['분기_당기순이익'], '분기_당기순이익')
         
+        흑자_매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['흑자_매출'], '흑자_매출')
         흑자_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['흑자_영업이익'], '흑자_영업이익')
         흑자_당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['흑자_당기순이익'], '흑자_당기순이익')
         흑자기업수 = get_매출_영업이익_순이익_증감수(base.Industry, 흑자기업수, '흑자기업')
         미집계 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['추정'], '미집계')
+        미집계_매출 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['미집계_매출'], '미집계_매출')
+        미집계_영업이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['미집계_영업이익'], '미집계_영업이익')
+        미집계_당기순이익 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['미집계_당기순이익'], '미집계_당기순이익')
         전년동분기대비 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['전년동분기대비'], '전년동분기대비')
 
         industry = base.Industry.drop(columns=['종목명', '종목코드'], axis=1).drop_duplicates(subset='업종명', keep='first').reset_index(drop=True)
         industry = industry[industry['업종명'] != '기타']
 
-        dfs = [ industry,업종_count, 가결산_매출, 가결산_영업이익, 가결산_당기순이익, 분기_매출, 분기_영업이익, 분기_당기순이익, 흑자_영업이익, 흑자_당기순이익, 미집계, 전년동분기대비, 흑자기업수 ]
+        dfs = [ industry,업종_count, 가결산_매출, 가결산_영업이익, 가결산_당기순이익, 분기_매출, 분기_영업이익, 분기_당기순이익, 흑자_매출, 흑자_영업이익, 흑자_당기순이익, 미집계, 미집계_매출,미집계_영업이익,미집계_당기순이익, 전년동분기대비, 흑자기업수 ]
         industry = reduce(lambda left, right: pd.merge(left, right, on='업종명', how='left'), dfs)
 
         industry = industry.fillna(0)
         industry['순이익기업'] = round(industry['흑자기업'] / industry['전체종목수'] * 100, 0)
 
-        cols = ['가결산_매출', '가결산_영업이익', '가결산_당기순이익', '분기_매출', '분기_영업이익', '분기_당기순이익', '흑자_영업이익', '흑자_당기순이익', '미집계', '전년동분기대비', '순이익기업', '흑자기업']
+        cols = ['가결산_매출', '가결산_영업이익', '가결산_당기순이익', '분기_매출', '분기_영업이익', '분기_당기순이익', '흑자_매출', '흑자_영업이익', '흑자_당기순이익', '미집계', '미집계_매출','미집계_영업이익','미집계_당기순이익' '전년동분기대비', '순이익기업', '흑자기업']
         for col in cols :
             industry[col] = industry[col].apply(pd.to_numeric, errors = 'coerce').fillna(0)
             industry[col] = industry[col].astype(int)
@@ -424,20 +415,14 @@ async def FindData(req : Request):
             종목리스트 += financial_growth['미집계']
             
             if 흑자 :
-                for cate_name in cate_2[1:] :
+                for cate_name in cate_2 :
                     target_category.append(f'미집계_흑자_{cate_name}')
                 get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
             else :
-                tmp = []
-                for cate_name in cate_2[1:] :
-                    tmp.append(f'미집계_흑자_{cate_name}')
-                흑자_df = base.get_category_industry(target_category=tmp, target_industry=target_industry)
-                
                 for cate_name in cate_2 :
                     target_category.append(f'미집계_{cate_name}')
                 get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
                 
-                get_data = pd.merge(get_data, 흑자_df, how='outer', indicator=True).query('_merge == "left_only"').drop(columns=['_merge'])
         
         stock_df = pd.DataFrame(종목리스트)
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
