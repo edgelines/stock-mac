@@ -421,15 +421,23 @@ async def FindData(req : Request):
 
         # 미집계 일경우
         else :
+            종목리스트 += financial_growth['미집계']
+            
             if 흑자 :
                 for cate_name in cate_2[1:] :
                     target_category.append(f'미집계_흑자_{cate_name}')
-            else : 
+                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+            else :
+                tmp = []
+                for cate_name in cate_2[1:] :
+                    tmp.append(f'미집계_흑자_{cate_name}')
+                흑자_df = base.get_category_industry(target_category=tmp, target_industry=target_industry)
+                
                 for cate_name in cate_2 :
                     target_category.append(f'미집계_{cate_name}')
-                    
-            get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
-            종목리스트 += financial_growth['미집계']
+                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+                
+                get_data = pd.merge(get_data, 흑자_df, how='outer', indicator=True).query('_merge == "left_only"').drop(columns=['_merge'])
         
         stock_df = pd.DataFrame(종목리스트)
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
