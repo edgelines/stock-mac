@@ -285,7 +285,7 @@ async def Search():
         industry = industry.fillna(0)
         industry['순이익기업'] = round(industry['흑자기업'] / industry['전체종목수'] * 100, 0)
 
-        cols = ['가결산_매출', '가결산_영업이익', '가결산_당기순이익', '분기_매출', '분기_영업이익', '분기_당기순이익', '흑자_매출', '흑자_영업이익', '흑자_당기순이익', '미집계', '미집계_매출','미집계_영업이익','미집계_당기순이익' '전년동분기대비', '순이익기업', '흑자기업']
+        cols = ['가결산_매출', '가결산_영업이익', '가결산_당기순이익', '분기_매출', '분기_영업이익', '분기_당기순이익', '흑자_매출', '흑자_영업이익', '흑자_당기순이익', '미집계', '미집계_매출','미집계_영업이익','미집계_당기순이익', '전년동분기대비', '순이익기업', '흑자기업']
         for col in cols :
             industry[col] = industry[col].apply(pd.to_numeric, errors = 'coerce').fillna(0)
             industry[col] = industry[col].astype(int)
