@@ -422,7 +422,7 @@ async def FindData(req : Request):
         # 미집계 일경우
         else :
             if 흑자 :
-                for cate_name in cate_2 :
+                for cate_name in cate_2[1:] :
                     target_category.append(f'미집계_흑자_{cate_name}')
             else : 
                 for cate_name in cate_2 :
