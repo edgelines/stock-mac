@@ -193,7 +193,7 @@ class SearchFinancial:
                 elif cate == '가결산_당기순이익' :
                     종목리스트 += 전년_해당년도_당기순이익
                 elif cate == '흑자기업' or cate == '흑자' :
-                    종목리스트 += 흑자_영업이익+흑자_당기순이익
+                    종목리스트 += 흑자_매출+흑자_영업이익+흑자_당기순이익
                 elif cate == '집계' :
                     종목리스트 += 전년_해당년도_매출+전년_해당년도_영업이익+전년_해당년도_당기순이익
                 elif cate == '분기' :
@@ -317,7 +317,7 @@ async def Search_market():
         코스피_전체 = preprocessing_코스피_코스닥_업종갯수(업종_count, 'Kospi')
         코스닥_전체 = preprocessing_코스피_코스닥_업종갯수(업종_count, 'Kosdaq')
 
-        list_흑자기업 = list(set(base.data['흑자_영업이익'] + base.data['흑자_당기순이익'] ))
+        list_흑자기업 = list(set(base.data['흑자_매출'] + base.data['흑자_영업이익'] + base.data['흑자_당기순이익'] ))
         df_흑자기업 = pd.DataFrame(list_흑자기업, columns=['종목코드'])
         df_흑자기업['시장'] = df_흑자기업['종목코드'].apply(base.find_market_name)
         df_흑자기업 = df_흑자기업.merge(base.Industry, on='종목코드', how='left')
