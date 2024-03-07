@@ -292,9 +292,9 @@ async def Search():
 
         industry = industry[industry['전체종목수'] > 1 ]
         industry = industry.reset_index(drop=True)
+        industry.sort_values(by='전일대비', ascending=False, inplace=True)
         industry['id'] = industry.index
-        
-                
+
         return industry.to_dict('records')
     except Exception as e:
         logging.error(e)
