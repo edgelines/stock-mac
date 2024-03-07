@@ -183,7 +183,7 @@ class SearchFinancial:
         
         종목리스트 = []
         if target_category is None :
-            종목리스트 += 분기매출+분기영업이익+분기당기순이익+추정+전년동분기대비+흑자_매출+흑자_영업이익+흑자_당기순이익+전년_해당년도_매출+전년_해당년도_영업이익+전년_해당년도_당기순이익
+            종목리스트 += self.data['전체']
         else :
             for cate in target_category:
                 if cate == '가결산_매출' :
@@ -387,41 +387,41 @@ async def FindData(req : Request):
         종목리스트, target_category=[], []
         if 집계 == None:
             # 전체 종목을 가져오는것.
-            for item1 in ['가결산', '미집계']:
-                for item2 in cate_2:
-                    target_category.append(f'{item1}_{item2}')
+            # for item1 in ['가결산', '미집계']:
+            #     for item2 in cate_2:
+            #         target_category.append(f'{item1}_{item2}')
             
             get_data = base.get_category_industry(target_category=None, target_industry=target_industry)
-            종목리스트 = financial_growth['가결산'] + financial_growth['미집계']
+            종목리스트 = financial_growth['전체']
             
-            
-        
         elif 집계 :
             for item1 in cate_1:
+                if item1 in ['가결산'] :
+                    종목리스트 += financial_growth['가결산']
+                            
+                elif item1 in ['분기'] :
+                    종목리스트 += financial_growth['분기']
+                
+                elif item1 in ['전년동분기대비'] :
+                    종목리스트 += financial_growth['전년동분기대비']
+                
                 for item2 in cate_2:
                     target_category.append(f'{item1}_{item2}')
             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
-            for cate in cate_1:
-                if cate in ['가결산'] :
-                    종목리스트 += financial_growth['가결산']
-                            
-                elif cate in ['분기'] :
-                    종목리스트 += financial_growth['분기']
-                
-                elif cate in ['전년동분기대비'] :
-                    종목리스트 += financial_growth['전년동분기대비']
+            
+            # for cate in cate_1:
 
             if 흑자 :
                 get_check = base.get_category_industry(target_category=['흑자'], target_industry=target_industry)
                 get_data = get_data[get_data['종목코드'].isin(get_check['종목코드'].to_list())]
                 
-            # else : 
-            #     종목리스트 = financial_growth['분기'] + financial_growth['전년동분기대비'] + financial_growth['미집계']
+            else : 
+                종목리스트 = financial_growth['전체']
             
 
         # 미집계 일경우
         else :
-            종목리스트 += financial_growth['미집계']
+            종목리스트 += financial_growth['미집계'] + financial_growth['전체']
             
             if 흑자 :
                 for cate_name in cate_2 :
