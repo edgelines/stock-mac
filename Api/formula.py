@@ -389,7 +389,7 @@ async def FindData(req : Request):
         # 업종명이 전체인지 아닌지 구분.
         if target_industry == [None] :
             target_industry = None
-            print(target_industry)
+            
         col = client.Info.FinancialGrowth
         financial_growth = list(col.find({},{'_id':0}))[0]
                 
@@ -441,8 +441,6 @@ async def FindData(req : Request):
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
         get_data = get_data.merge(stock_df, on='종목코드', how='left').dropna()
         get_data['id'] = get_data.index
-        print(get_data)
-        print('send')
         return get_data.to_dict(orient='records')
 
     except Exception as e:
