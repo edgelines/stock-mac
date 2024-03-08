@@ -356,7 +356,10 @@ async def FindData(req : Request):
             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
         else : 
             try :
-                get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
+                if target_industry == None :
+                    get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+                else :
+                    get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
             except :
                 get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
         
@@ -446,48 +449,51 @@ async def FindData(req : Request):
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
     
-@router.post('/findCrossData', response_class=JSONResponse)
-async def FindData(req : Request):
-    try :
-        base = SearchFinancial()
-        req_data = await req.json()
-        집계 = req_data['aggregated']
-        흑자 = req_data['surplus']
+# @router.post('/findCrossData', response_class=JSONResponse)
+# async def FindData(req : Request):
+#     try :
+#         base = SearchFinancial()
+#         req_data = await req.json()
+#         집계 = req_data['aggregated']
+#         흑자 = req_data['surplus']
 
-        cate_1 = req_data['target_category1']
-        cate_2 = req_data['target_category2']
-        target_industry = req_data['target_industry']
-                        
-        target_category=[], []
-        # 집계 일경우
-        if 집계 :
-            for item1 in cate_1:
-                for item2 in cate_2:
-                    target_category.append(f'{item1}_{item2}')
-
-        # 미집계 일경우
-        else :
-            if 흑자 :
-                for cate_name in cate_2 :
-                    target_category.append(f'미집계_흑자_{cate_name}')
-            else : 
-                for cate_name in cate_2 :
-                    target_category.append(f'미집계_{cate_name}')
+#         cate_1 = req_data['target_category1']
+#         cate_2 = req_data['target_category2']
+#         target_industry = req_data['target_industry']
         
-        try :
-            if target_industry != None :
-                get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
-            else :
-                print(target_industry, 'willR X')
-                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)    
-        except :
-            get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
-        
-        get_data = get_data.fillna(0)
-        get_data['id'] = get_data.index
-        print('Send')
-        return get_data.to_dict(orient='records')
+#         print(집계, 흑자, cate_1, cate_2, target_industry)
+#         target_category=[], []
+#         # 집계 일경우
+#         if 집계 :
+#             for item1 in cate_1:
+#                 for item2 in cate_2:
+#                     target_category.append(f'{item1}_{item2}')
 
-    except Exception as e:
-        logging.error(e)
-        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+#         # 미집계 일경우
+#         else :
+#             if 흑자 :
+#                 for cate_name in cate_2 :
+#                     target_category.append(f'미집계_흑자_{cate_name}')
+#             else : 
+#                 for cate_name in cate_2 :
+#                     target_category.append(f'미집계_{cate_name}')
+        
+#         try :
+#             if target_industry != None :
+#                 get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
+            
+#             # 전체종목 불러올때는 willR 제외
+#             else :
+#                 print(target_industry, 'willR X')
+#                 get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)    
+#         except :
+#             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+        
+#         get_data = get_data.fillna(0)
+#         get_data['id'] = get_data.index
+#         print('Send')
+#         return get_data.to_dict(orient='records')
+
+#     except Exception as e:
+#         logging.error(e)
+#         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
