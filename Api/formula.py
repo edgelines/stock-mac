@@ -356,7 +356,7 @@ async def FindData(req : Request):
             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
         else : 
             try :
-                if target_industry == None :
+                if target_industry == [None] :
                     print(target_industry, 'None')
                     get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
                 else :
