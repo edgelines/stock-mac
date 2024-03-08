@@ -388,7 +388,7 @@ async def FindData(req : Request):
         
         # 업종명이 전체인지 아닌지 구분.
         if target_industry == [None] :
-            target_industry == None
+            target_industry = None
         print(target_industry)
         col = client.Info.FinancialGrowth
         financial_growth = list(col.find({},{'_id':0}))[0]
