@@ -63,7 +63,9 @@ async def getStockChartData(code, days=250, week='day') :
                 df = pd.DataFrame(data_list[1:], columns=data_list[0])
                 stock = df[['날짜', '시가','고가','저가','종가']]
                 volume = df[['날짜', '거래량']]
-
+                close_list = df['종가'].to_list()
+                net = (close_list[-1] - close_list[-2]) / close_list[-2] * 100
+                
                 col = client.AoX.TreasuryStock
                 취득 = 자사주_취득처분(col, code, '취득')
                 처분 = 자사주_취득처분(col, code, '처분')
@@ -78,7 +80,7 @@ async def getStockChartData(code, days=250, week='day') :
                     'w33':round(WillR33.to_list()[-1],1)
                 }
                 
-                result = { 'price' : tools.날짜전처리(stock), 'volume' : tools.날짜전처리(volume), 'treasury' : 취득+처분, 'willR' : willR }
+                result = { 'price' : tools.날짜전처리(stock), 'volume' : tools.날짜전처리(volume), 'net':round(net, 2), 'treasury' : 취득+처분, 'willR' : willR }
                 return result
 
     except Exception as e:
