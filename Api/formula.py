@@ -219,7 +219,7 @@ class SearchFinancial:
         df_raw['이벤트'] = df_raw['종목명'].apply(self.find_events_for_stock)
         df_raw = df_raw.merge(self.StockEtcInfo, how='left', on='종목코드').merge(self.Financial, how='left', on='종목코드').merge(self.CompanyOverview, how='left', on='종목코드')
         df_raw['시장'] = df_raw['종목코드'].apply(self.find_market_name)
-        
+        df_raw = df_raw[df_raw['업종명'] != '기타']
         return df_raw
     
     def get_category_industry_with_willR(self, target_category=None, target_industry=None):
@@ -351,13 +351,11 @@ async def FindData(req : Request):
         target_industry = req_data['target_industry']
         WillR = req_data['WillR']
         market = req_data['market']
-        print(target_industry)
         if WillR == 'X' :
             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
         else : 
             try :
                 if target_industry == [None] :
-                    print(target_industry, 'None')
                     get_data = base.get_category_industry(target_category=target_category, target_industry=None)
                 else :
                     get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
@@ -367,7 +365,6 @@ async def FindData(req : Request):
         if market != None :
             get_data = get_data[get_data['시장'] == market]
         
-        print('send')
         get_data = get_data.fillna(0)
         get_data['id'] = get_data.index
         # print(get_data, get_data.info(), get_data.to_dict(orient='records'))
@@ -392,7 +389,7 @@ async def FindData(req : Request):
         # 업종명이 전체인지 아닌지 구분.
         if target_industry == [None] :
             target_industry == None
-        
+        print(target_industry)
         col = client.Info.FinancialGrowth
         financial_growth = list(col.find({},{'_id':0}))[0]
                 
@@ -445,6 +442,7 @@ async def FindData(req : Request):
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
         get_data = get_data.merge(stock_df, on='종목코드', how='left').dropna()
         get_data['id'] = get_data.index
+        print('send')
         return get_data.to_dict(orient='records')
 
     except Exception as e:
