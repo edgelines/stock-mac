@@ -42,7 +42,7 @@ def 자사주_취득처분(col, code, 취득처분) :
 
 
 @router.get('/get/{code}')
-async def getStockChartData(code, days=200, week='day') :
+async def getStockChartData(code, days=250, week='day') :
     try :
         today = datetime.today()
         endDate = today.strftime('%Y%m%d')
