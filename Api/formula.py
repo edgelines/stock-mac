@@ -389,16 +389,16 @@ async def FindData(req : Request):
         cate_2 = req_data['target_category2']
         target_industry = req_data['target_industry']
         
+        # 업종명이 전체인지 아닌지 구분.
+        if target_industry == [None] :
+            target_industry == None
+        
         col = client.Info.FinancialGrowth
         financial_growth = list(col.find({},{'_id':0}))[0]
                 
         종목리스트, target_category=[], []
         if 집계 == None:
             # 전체 종목을 가져오는것.
-            # for item1 in ['가결산', '미집계']:
-            #     for item2 in cate_2:
-            #         target_category.append(f'{item1}_{item2}')
-            
             get_data = base.get_category_industry(target_category=None, target_industry=target_industry)
             종목리스트 = financial_growth['전체']
             
