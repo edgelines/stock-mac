@@ -34,7 +34,7 @@ def 자사주_취득처분(col, code, 취득처분) :
                         'text': f'자사주 {취득처분}',
                         'rotation': 0,
                         'y': -3,
-                        'x': 0,
+                        'x': -15,
                     }
             }
             result.append(add)
