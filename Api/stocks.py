@@ -68,9 +68,9 @@ async def getStockChartData(code, days=200, week='day') :
                 취득 = 자사주_취득처분(col, code, '취득')
                 처분 = 자사주_취득처분(col, code, '처분')
                 
-                WillR9 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=9)
-                WillR14 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=14)
-                WillR33 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=33)
+                WillR9 = ta.WILLR(stock['고가'], stock['저가'], stock['종가'], timeperiod=9)
+                WillR14 = ta.WILLR(stock['고가'], stock['저가'], stock['종가'], timeperiod=14)
+                WillR33 = ta.WILLR(stock['고가'], stock['저가'], stock['종가'], timeperiod=33)
                 
                 willR = {
                     '9':round(WillR9[-1],1),
