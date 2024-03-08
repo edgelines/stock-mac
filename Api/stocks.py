@@ -40,6 +40,7 @@ def 자사주_취득처분(col, code, 취득처분) :
             result.append(add)
     return result
 
+
 @router.get('/get/{code}')
 async def getStockChartData(code, days=200, week='day') :
     try :
@@ -66,11 +67,24 @@ async def getStockChartData(code, days=200, week='day') :
                 col = client.AoX.TreasuryStock
                 취득 = 자사주_취득처분(col, code, '취득')
                 처분 = 자사주_취득처분(col, code, '처분')
-                result = { 'price' : tools.날짜전처리(stock), 'volume' : tools.날짜전처리(volume), 'treasury' : 취득+처분 }
+                
+                WillR9 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=9)
+                WillR14 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=14)
+                WillR33 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=33)
+                
+                willR = {
+                    '9':round(WillR9[-1],1),
+                    '14':round(WillR14[-1],1),
+                    '33':round(WillR33[-1],1)
+                }
+                
+                result = { 'price' : tools.날짜전처리(stock), 'volume' : tools.날짜전처리(volume), 'treasury' : 취득+처분, 'willR' : willR }
                 return result
 
     except Exception as e:
         return {"error" : str(e)}
+
+
 
 @router.get('/{code}')
 async def loadStock(code, limit: int=1000):

@@ -355,7 +355,10 @@ async def FindData(req : Request):
         if WillR == 'X' :
             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
         else : 
-            get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
+            try :
+                get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
+            except :
+                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
         
         if market != None :
             get_data = get_data[get_data['시장'] == market]
@@ -462,7 +465,7 @@ async def FindData(req : Request):
                 for item2 in cate_2:
                     target_category.append(f'{item1}_{item2}')
 
-            get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
+            
             
         # 미집계 일경우
         else :
@@ -472,8 +475,11 @@ async def FindData(req : Request):
             else : 
                 for cate_name in cate_2 :
                     target_category.append(f'미집계_{cate_name}')
-                    
+        
+        try :            
             get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
+        except :
+            get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
                 
         get_data = get_data.fillna(0)
         get_data['id'] = get_data.index
