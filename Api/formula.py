@@ -478,12 +478,14 @@ async def FindData(req : Request):
             if target_industry != None :
                 get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
             else :
+                print(target_industry, 'willR X')
                 get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)    
         except :
             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
-                
+        
         get_data = get_data.fillna(0)
         get_data['id'] = get_data.index
+        print('Send')
         return get_data.to_dict(orient='records')
 
     except Exception as e:
