@@ -73,9 +73,9 @@ async def getStockChartData(code, days=200, week='day') :
                 WillR33 = ta.WILLR(stock['고가'], stock['저가'], stock['종가'], timeperiod=33)
                 
                 willR = {
-                    '9':round(WillR9[-1],1),
-                    '14':round(WillR14[-1],1),
-                    '33':round(WillR33[-1],1)
+                    '9':round(WillR9.to_list()[-1],1),
+                    '14':round(WillR14.to_list()[-1],1),
+                    '33':round(WillR33.to_list()[-1],1)
                 }
                 
                 result = { 'price' : tools.날짜전처리(stock), 'volume' : tools.날짜전처리(volume), 'treasury' : 취득+처분, 'willR' : willR }
