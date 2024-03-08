@@ -465,8 +465,6 @@ async def FindData(req : Request):
                 for item2 in cate_2:
                     target_category.append(f'{item1}_{item2}')
 
-            
-            
         # 미집계 일경우
         else :
             if 흑자 :
@@ -476,8 +474,11 @@ async def FindData(req : Request):
                 for cate_name in cate_2 :
                     target_category.append(f'미집계_{cate_name}')
         
-        try :            
-            get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
+        try :
+            if target_industry != None :
+                get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
+            else :
+                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)    
         except :
             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
                 
