@@ -208,11 +208,9 @@ class SearchFinancial:
                     종목리스트 += self.data[cate]
         
         df_raw = self.Industry
-        # if target_industry == '제약' :
-        #     df_raw = df_raw[df_raw['업종명'] == target_industry]
+        
         if target_industry != None :
             df_raw = df_raw[df_raw['업종명'].isin(target_industry)]
-            # df_raw = df_raw[df_raw['업종명'] == target_industry]
         
         종목리스트 = list(set(종목리스트))
         df_raw = df_raw[df_raw['종목코드'].isin(종목리스트)]
@@ -351,16 +349,16 @@ async def FindData(req : Request):
         target_industry = req_data['target_industry']
         WillR = req_data['WillR']
         market = req_data['market']
-        if WillR == 'X' :
+        # if WillR == 'X' :
+        #     get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+        if target_industry == [None] :
+            get_data = base.get_category_industry(target_category=target_category, target_industry=None)
+        else :
+            # get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
+        # else : 
+        #     try :
+        #     except :
             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
-        else : 
-            try :
-                if target_industry == [None] :
-                    get_data = base.get_category_industry(target_category=target_category, target_industry=None)
-                else :
-                    get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
-            except :
-                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
         
         if market != None :
             get_data = get_data[get_data['시장'] == market]
