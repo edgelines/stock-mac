@@ -98,9 +98,9 @@ class SearchFinancial:
         # col = client.Info.CompanyOverview
         # self.CompanyOverview = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, '동일업종PER' :1}))
         
-        # # PER, PBR
-        # col = client.Info.StockEtcInfo
-        # self.StockEtcInfo = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, 'PER' :1, 'PBR' :1 }))
+        # 시가총액
+        col = client.Info.StockEtcInfo
+        self.StockEtcInfo = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, '시가총액' :1 }))
         
         # 종목별 재무제표 + 유보율, 부채비율
         col = client.Info.Financial
@@ -220,7 +220,7 @@ class SearchFinancial:
         df_raw = df_raw[df_raw['종목코드'].isin(종목리스트)]
         
         # df_raw['이벤트'] = df_raw['종목명'].apply(self.find_events_for_stock)
-        df_raw = df_raw.merge(self.Financial, how='left', on='종목코드').merge(self.StockThemes, how='left', on='종목코드')
+        df_raw = df_raw.merge(self.Financial, how='left', on='종목코드').merge(self.StockThemes, how='left', on='종목코드').merge(self.StockEtcInfo, how='left', on='종목코드')
         df_raw['시장'] = df_raw['종목코드'].apply(self.find_market_name)
         df_raw = df_raw[df_raw['업종명'] != '기타']
         return df_raw
@@ -385,7 +385,10 @@ class FinancialPerformance:
                     tmp = {
                         '종목코드' : row['종목코드'],
                         '연간' : 실적['연간'],
-                        '분기' : 실적['분기']
+                        '1Q' : 실적['분기'][0]['1Q'],
+                        '2Q' : 실적['분기'][1]['2Q'],
+                        '3Q' : 실적['분기'][2]['3Q'],
+                        '4Q' : 실적['분기'][3]['4Q']
                     }
                     data.append(tmp)
         return pd.DataFrame(data)
