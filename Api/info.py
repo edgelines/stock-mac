@@ -139,8 +139,6 @@ async def StockEtcInfo(code):
             favorite.append(code)
         
         result = {'종목명' : favorite}
-        print(favorite, code)
-        print(result)
         col.update_one({"_id": "favorite"}, { "$set": result }, upsert=True )
         
 
