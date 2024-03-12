@@ -125,6 +125,28 @@ async def StockEtcInfo(code):
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+    
+@router.get('/Favorite/{code}')
+async def StockEtcInfo(code):
+    try :
+        # Favorite 
+        col = client.Info.Favorite
+        favorite = list(col.find({},{'_id':0}))[0]['종목명']
+        
+        if code in favorite :
+            favorite.remove(code)
+        else :
+            favorite.append(code)
+        
+        result = {'종목명' : favorite}
+        col.update_one({"_id": "favorite"}, { "$set": result }, upsert=True )
+        
+
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+
+
 
 @router.get('/{name}')
 async def loadDB(name):
