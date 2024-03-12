@@ -89,6 +89,10 @@ async def StockEtcInfo(code):
         col = client['Info']['IpoPulse']
         IpoPulse = pd.DataFrame(col.find({ "종목코드":code },{'_id':0, '종목코드':1, '보호예수' : 1 }))
 
+        # Favorite 
+        col = client.Info.Favorite
+        favorite = list(col.find({},{'_id':0}))[0]['종목명']
+        
         df = df_base.merge(df_fin, on='종목코드').merge(df_com, on='종목코드').merge(df_pri, on='종목코드')
         if '보호예수' in list(IpoPulse.columns) :    
             df = df.merge(IpoPulse, on='종목코드')
@@ -110,6 +114,12 @@ async def StockEtcInfo(code):
             df['이벤트'] = _text[:-2]
         else :
             df['이벤트'] = ''
+        
+        favo = ['O' for check in favorite if df['종목코드'][0] in check]
+        if len(favo)>0 :
+            df['Favorite'] = True
+        else :
+            df['Favorite'] = False
         
         return df.to_dict(orient='records')[0]
     except Exception as e:
