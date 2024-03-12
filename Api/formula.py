@@ -90,13 +90,17 @@ class SearchFinancial:
         col = client.HTS.Financial
         self.data = list(col.find({},{'_id' : 0}))[0]
         
-        # 동일업종PER
-        col = client.Info.CompanyOverview
-        self.CompanyOverview = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, '동일업종PER' :1}))
+        # 종목별 테마
+        col = client.Info.StockThemes
+        self.StockThemes = pd.DataFrame(col.find({},{'_id':0, '종목코드' : 1, '테마명':1}))
         
-        # PER, PBR
-        col = client.Info.StockEtcInfo
-        self.StockEtcInfo = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, 'PER' :1, 'PBR' :1 }))
+        # # 동일업종PER
+        # col = client.Info.CompanyOverview
+        # self.CompanyOverview = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, '동일업종PER' :1}))
+        
+        # # PER, PBR
+        # col = client.Info.StockEtcInfo
+        # self.StockEtcInfo = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, 'PER' :1, 'PBR' :1 }))
         
         # 종목별 재무제표 + 유보율, 부채비율
         col = client.Info.Financial
@@ -120,46 +124,46 @@ class SearchFinancial:
         col = client.Info.MarketList
         self.MarketList = list(col.find({},{'_id':0}))[0]
         
-    def willR(self, stock_code):
+    # def willR(self, stock_code):
         
-        redis_client = redis.Redis(host='192.168.0.3', port=6379, db=0)
-        data_json = redis_client.get(stock_code).decode('utf-8')
-        df = pd.read_json(data_json)
+    #     redis_client = redis.Redis(host='192.168.0.3', port=6379, db=0)
+    #     data_json = redis_client.get(stock_code).decode('utf-8')
+    #     df = pd.read_json(data_json)
         
-        stock = self.StockPriceDaily 
-        add = stock[stock['종목코드'] == stock_code]
-        add['날짜'] = datetime.today().strftime('%Y-%m-%d')
+    #     stock = self.StockPriceDaily 
+    #     add = stock[stock['종목코드'] == stock_code]
+    #     add['날짜'] = datetime.today().strftime('%Y-%m-%d')
         
-        df = pd.concat([df, add[['날짜', '시가', '고가', '저가', '종가']]])
-        # df['날짜'] = pd.to_datetime(df['날짜'])
-        df.reset_index(drop=True, inplace=True)
+    #     df = pd.concat([df, add[['날짜', '시가', '고가', '저가', '종가']]])
+    #     # df['날짜'] = pd.to_datetime(df['날짜'])
+    #     df.reset_index(drop=True, inplace=True)
         
-        WillR9 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=9)
-        WillR14 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=14)
-        WillR33 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=33)
+    #     WillR9 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=9)
+    #     WillR14 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=14)
+    #     WillR33 = ta.WILLR(df['고가'], df['저가'], df['종가'], timeperiod=33)
         
-        return {
-            'WillR9' : WillR9,
-            'WillR14' : WillR14,
-            'WillR33' : WillR33,
-        } 
+    #     return {
+    #         'WillR9' : WillR9,
+    #         'WillR14' : WillR14,
+    #         'WillR33' : WillR33,
+    #     } 
     
-    def find_events_for_stock(self, stock_name):
-        """종목명에 해당하는 이벤트를 찾아서 '이벤트' 컬럼에 추가하기 위한 함수 정의
+    # def find_events_for_stock(self, stock_name):
+    #     """종목명에 해당하는 이벤트를 찾아서 '이벤트' 컬럼에 추가하기 위한 함수 정의
 
-        Args:
-            stock_name (_type_): _description_
+    #     Args:
+    #         stock_name (_type_): _description_
 
-        Returns:
-            _type_: _description_
-        """
-        # 종목명에 해당하는 이벤트를 필터링
-        filtered_events = [event for event in self.StockEvent if event['item'] == stock_name]
-        # 필터링된 이벤트가 있으면 이벤트 정보를 문자열로 반환, 없으면 빈 문자열 반환
-        if filtered_events:
-            return ', '.join([event['event'] for event in filtered_events])
-        else:
-            return ''
+    #     Returns:
+    #         _type_: _description_
+    #     """
+    #     # 종목명에 해당하는 이벤트를 필터링
+    #     filtered_events = [event for event in self.StockEvent if event['item'] == stock_name]
+    #     # 필터링된 이벤트가 있으면 이벤트 정보를 문자열로 반환, 없으면 빈 문자열 반환
+    #     if filtered_events:
+    #         return ', '.join([event['event'] for event in filtered_events])
+    #     else:
+    #         return ''
     
     def find_market_name(self, code):
         if code in self.MarketList['코스피'] :
@@ -214,33 +218,34 @@ class SearchFinancial:
         
         종목리스트 = list(set(종목리스트))
         df_raw = df_raw[df_raw['종목코드'].isin(종목리스트)]
-        df_raw['이벤트'] = df_raw['종목명'].apply(self.find_events_for_stock)
-        df_raw = df_raw.merge(self.StockEtcInfo, how='left', on='종목코드').merge(self.Financial, how='left', on='종목코드').merge(self.CompanyOverview, how='left', on='종목코드')
+        
+        # df_raw['이벤트'] = df_raw['종목명'].apply(self.find_events_for_stock)
+        df_raw = df_raw.merge(self.Financial, how='left', on='종목코드').merge(self.StockThemes, how='left', on='종목코드')
         df_raw['시장'] = df_raw['종목코드'].apply(self.find_market_name)
         df_raw = df_raw[df_raw['업종명'] != '기타']
         return df_raw
     
-    def get_category_industry_with_willR(self, target_category=None, target_industry=None):
-        df_raw = self.get_category_industry(target_category, target_industry)
-        for index, row in df_raw.iterrows():
-            stock_code = row['종목코드']
-            willR_values = self.willR(stock_code)
+    # def get_category_industry_with_willR(self, target_category=None, target_industry=None):
+    #     df_raw = self.get_category_industry(target_category, target_industry)
+    #     for index, row in df_raw.iterrows():
+    #         stock_code = row['종목코드']
+    #         willR_values = self.willR(stock_code)
             
-            # WillR 값들을 df에 추가
-            try :
-                df_raw.at[index, 'WillR9'] = round(willR_values['WillR9'][-1],1)
-            except :
-                df_raw.at[index, 'WillR9'] = ''
-            try :
-                df_raw.at[index, 'WillR14'] = round(willR_values['WillR14'][-1],1)
-            except :
-                df_raw.at[index, 'WillR14'] = ''
-            try :
-                df_raw.at[index, 'WillR33'] = round(willR_values['WillR33'][-1], 1)
-            except : 
-                df_raw.at[index, 'WillR33'] = ''
+    #         # WillR 값들을 df에 추가
+    #         try :
+    #             df_raw.at[index, 'WillR9'] = round(willR_values['WillR9'][-1],1)
+    #         except :
+    #             df_raw.at[index, 'WillR9'] = ''
+    #         try :
+    #             df_raw.at[index, 'WillR14'] = round(willR_values['WillR14'][-1],1)
+    #         except :
+    #             df_raw.at[index, 'WillR14'] = ''
+    #         try :
+    #             df_raw.at[index, 'WillR33'] = round(willR_values['WillR33'][-1], 1)
+    #         except : 
+    #             df_raw.at[index, 'WillR33'] = ''
             
-        return df_raw
+    #     return df_raw
 
 def get_매출_영업이익_순이익_증감수(industry, stock_list, column_name):
     data = industry[industry['종목코드'].isin(stock_list)]
@@ -304,6 +309,7 @@ def preprocessing_코스피_코스닥_업종갯수(df, 구분='Kospi', columns=[
     df.columns=columns
     return df
 
+# Tree MAP
 @router.get('/searchMarket')
 async def Search_market():
     try :
@@ -339,7 +345,52 @@ async def Search_market():
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "SearchFinancial Server Error"})
+
+class FinancialPerformance:
+    """회계년도 기준으로 연간/분기별 당기순이익 리턴
+    """
+    def __init__(self):
+        # 종목별 재무제표 + 유보율, 부채비율
+        col = client.Info.Financial
+        self.performance = list(col.find({},{'_id':0, '유보율':0, '부채비율' :0}))
     
+    def 실적_전처리(self, data) :
+        """회계년도 기준 연간 / 분기별 당기순이익 반환
+        """
+        annaul = data['연간실적'][-1]
+        quarter = data['분기실적']
+        
+        year = annaul['날짜'].split('.')[0]
+        month = annaul['날짜'].split('.')[1][:2]
+        
+        quarter_data = [{'1Q':0}, {'2Q': 0}, {'3Q': 0}, {'4Q': 0}]
+        inx = 0
+        for row in quarter :
+            if month == '12':
+                if year in row['날짜'] :
+                    quarter_data[inx][f'{str(inx+1)}Q'] = row['당기순이익']
+                    inx += 1
+            else :
+                if f'{str(int(year)-1)}.{month}' < row['날짜'].split('(E)')[0] < f'{year}.{month}' :
+                    quarter_data[inx][f'{str(inx+1)}Q'] = row['당기순이익']
+                    inx += 1
+        return {'연간' : annaul['당기순이익'], '분기':quarter_data}
+    
+    def 실적(self, 종목리스트):
+        data = []
+        for row in self.performance :
+            for code in 종목리스트 : 
+                if code in row['종목코드']:
+                    실적 =self.실적_전처리(row)
+                    tmp = {
+                        '종목코드' : row['종목코드'],
+                        '연간' : 실적['연간'],
+                        '분기' : 실적['분기']
+                    }
+                    data.append(tmp)
+        return pd.DataFrame(data)
+
+# Bottom Table List
 @router.post('/findData', response_class=JSONResponse)
 async def FindData(req : Request):
     try :
@@ -347,7 +398,7 @@ async def FindData(req : Request):
         req_data = await req.json()
         target_category = req_data['target_category']
         target_industry = req_data['target_industry']
-        WillR = req_data['WillR']
+        # WillR = req_data['WillR']
         market = req_data['market']
         # if WillR == 'X' :
         #     get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
@@ -363,8 +414,14 @@ async def FindData(req : Request):
         if market != None :
             get_data = get_data[get_data['시장'] == market]
         
+        financial = FinancialPerformance()
+        stock_code = get_data['종목코드'].to_list()
+        df = financial.실적(stock_code)
+        
+        get_data = get_data.merge(df, on='종목코드', how='left')
         get_data = get_data.fillna(0)
         get_data['id'] = get_data.index
+        
         # print(get_data, get_data.info(), get_data.to_dict(orient='records'))
         return get_data.to_dict(orient='records')
 
