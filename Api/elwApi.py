@@ -66,42 +66,42 @@ async def get_elw_bar_data():
 
     return encoded_result
 
-# CallPutPage 왼쪽 상단 Chart
-@router.get('/ElwPutCallRatioData')
-async def ElwPutCallRatioData():
-    # result = client['AoX']['ElwPutCallRatioData']
-    result = client['ELW']['ElwPutCallRatioData']
-    data = list(result.find({}, {'_id':0}))
+# # CallPutPage 왼쪽 상단 Chart
+# @router.get('/ElwPutCallRatioData')
+# async def ElwPutCallRatioData():
+#     # result = client['AoX']['ElwPutCallRatioData']
+#     result = client['ELW']['ElwPutCallRatioData']
+#     data = list(result.find({}, {'_id':0}))
     
-    Day1, Day2, Day3, Day4, Day5, Day20, Day100 = [], [], [], [], [], [], []
+#     Day1, Day2, Day3, Day4, Day5, Day20, Day100 = [], [], [], [], [], [], []
 
-    for value in data:
-        Day1.append([value['날짜'], value['풋_거래대금'] / value['콜_거래대금']])
-        if value['비율_2일'] != '' : 
-            Day2.append([value['날짜'], value['비율_2일']])
-        if value['비율_3일'] != '' : 
-            Day3.append([value['날짜'], value['비율_3일']])
-        if value['비율_4일'] != '' : 
-            Day4.append([value['날짜'], value['비율_4일']])
-        if value['비율_5일'] != '' : 
-            Day5.append([value['날짜'], value['비율_5일']])
-        if value['비율_20일'] != '' : 
-            Day20.append([value['날짜'], value['비율_20일']])
-        if value['비율_100일'] != '' : 
-            Day100.append([value['날짜'], value['비율_100일']])
+#     for value in data:
+#         Day1.append([value['날짜'], value['풋_거래대금'] / value['콜_거래대금']])
+#         if value['비율_2일'] != '' : 
+#             Day2.append([value['날짜'], value['비율_2일']])
+#         if value['비율_3일'] != '' : 
+#             Day3.append([value['날짜'], value['비율_3일']])
+#         if value['비율_4일'] != '' : 
+#             Day4.append([value['날짜'], value['비율_4일']])
+#         if value['비율_5일'] != '' : 
+#             Day5.append([value['날짜'], value['비율_5일']])
+#         if value['비율_20일'] != '' : 
+#             Day20.append([value['날짜'], value['비율_20일']])
+#         if value['비율_100일'] != '' : 
+#             Day100.append([value['날짜'], value['비율_100일']])
     
-    result = {
-            "Day1": Day1, 
-            "Day2": Day2, 
-            "Day3": Day3, 
-            "Day4": Day4, 
-            "Day5": Day5, 
-            "Day20": Day20, 
-            "Day100": Day100
+#     result = {
+#             "Day1": Day1, 
+#             "Day2": Day2, 
+#             "Day3": Day3, 
+#             "Day4": Day4, 
+#             "Day5": Day5, 
+#             "Day20": Day20, 
+#             "Day100": Day100
             
-        }
+#         }
     
-    return result
+#     return result
 
 # CallPutPage 가운데 상단 Chart
 @router.get('/DayGr')

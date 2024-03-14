@@ -116,32 +116,32 @@ async def Deposit():
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
-def getPER_PBR_Data(df):
-    result = []
-    colors = ['red', 'peru', 'tomato', 'coral', 'wheat', 'orange', 'gold', 'yellow', 'greenyellow', 'pink', 'cyan', 'limegreen', 'deepskyblue', 'dodgerblue', 'mistyrose', 'skyblue', 'beige', 'lightsteelblue', 'lavender', 'plum', 'snow']
-    for index, row in df.iterrows():
-        # PER 값을 파싱하고, 에러가 발생하면 None으로 설정
-        try:
-            per = float(row['PER'])
-        except ValueError:
-            per = None
-        item = {
-            'name': f"{row['업종명']} ({row['종목수']})",
-            'data': [[row['PBR'], per] if per is not None else [row['PBR']]],
-            'color': colors[index % len(colors)]
-        }
-        result.append(item)
-    return result
+# def getPER_PBR_Data(df):
+#     result = []
+#     colors = ['red', 'peru', 'tomato', 'coral', 'wheat', 'orange', 'gold', 'yellow', 'greenyellow', 'pink', 'cyan', 'limegreen', 'deepskyblue', 'dodgerblue', 'mistyrose', 'skyblue', 'beige', 'lightsteelblue', 'lavender', 'plum', 'snow']
+#     for index, row in df.iterrows():
+#         # PER 값을 파싱하고, 에러가 발생하면 None으로 설정
+#         try:
+#             per = float(row['PER'])
+#         except ValueError:
+#             per = None
+#         item = {
+#             'name': f"{row['업종명']} ({row['종목수']})",
+#             'data': [[row['PBR'], per] if per is not None else [row['PBR']]],
+#             'color': colors[index % len(colors)]
+#         }
+#         result.append(item)
+#     return result
 
-@router.get('/PER_PBR')
-async def PER_PBR(name):
-    try :
-        col = client['Indices'][f'{name}PER_PBR']
-        df = pd.DataFrame(col.find({},{'_id' :0}))
-        return getPER_PBR_Data(df)
-    except Exception as e:
-        logging.error(e)
-        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+# @router.get('/PER_PBR')
+# async def PER_PBR(name):
+#     try :
+#         col = client['Indices'][f'{name}PER_PBR']
+#         df = pd.DataFrame(col.find({},{'_id' :0}))
+#         return getPER_PBR_Data(df)
+#     except Exception as e:
+#         logging.error(e)
+#         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
 
 
@@ -164,61 +164,3 @@ async def loadDB(name):
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
-
-    file_path = 'D:/Data/exNow_US.json'
-    with open(file_path, encoding='utf-8') as json_file:
-        data = json.load(json_file)
-    
-    # 데이터 저장을 위한 리스트 초기화
-    dataArray = [[] for _ in range(13)]
-    지난달_47 = [None] * 13
-    지난달_43 = [None] * 13
-    지난달_41 = [None] * 13
-    지난달_39 = [None] * 13
-    지난달_21 = [None] * 13
-    지난달_10 = [None] * 13
-    지난달_5 = [None] * 13
-    지난달_만기 = [None] * 13
-    지난달_만기월 = [None] * 13
-
-    # 데이터 처리
-    for item in data:
-        for j in range(12):
-            dataArray[j].append([item['ts'], item[f'지난달{j}_Ref']])
-
-            if item[f'지난달{j}'] == 47:
-                지난달_47[j] = item['ts']
-            elif item[f'지난달{j}'] == 43:
-                지난달_43[j] = item['ts']
-            elif item[f'지난달{j}'] == 41:
-                지난달_41[j] = item['ts']
-            elif item[f'지난달{j}'] == 39:
-                지난달_39[j] = item['ts']
-            elif item[f'지난달{j}'] == 16:
-                지난달_21[j] = item['ts']
-            elif item[f'지난달{j}'] == 10:
-                지난달_10[j] = item['ts']
-            elif item[f'지난달{j}'] == 5:
-                지난달_5[j] = item['ts']
-            elif item[f'지난달{j}'] == 1:
-                지난달_만기[j] = item['ts']
-                # 만기월 = datetime.fromtimestamp(item['ts'] / 1000).month
-                # 지난달_만기월[j] = f"{만기월 - 1:02}" if 만기월 > 1 else "12"
-                지난달_만기월[j] = datetime.fromtimestamp(item['ts'] / 1000).strftime('%m')
-
-    # 최종 데이터 구조 생성
-    commitData = {}
-    DataUS = {}
-    for index in range(12):
-        DataUS[f'data{index}'] = dataArray[index]
-        commitData[f'지난달{index}_47'] = 지난달_47[index]
-        commitData[f'지난달{index}_43'] = 지난달_43[index]
-        commitData[f'지난달{index}_41'] = 지난달_41[index]
-        commitData[f'지난달{index}_39'] = 지난달_39[index]
-        commitData[f'지난달{index}_21'] = 지난달_21[index]
-        commitData[f'지난달{index}_10'] = 지난달_10[index]
-        commitData[f'지난달{index}_6'] = 지난달_5[index]
-        commitData[f'지난달{index}_만기'] = 지난달_만기[index]
-        commitData[f'지난달{index}_만기월'] = 지난달_만기월[index]
-        
-    return {"commitData" : commitData, "DataUS" : DataUS}

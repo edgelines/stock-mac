@@ -94,10 +94,6 @@ class SearchFinancial:
         col = client.Info.StockThemes
         self.StockThemes = pd.DataFrame(col.find({},{'_id':0, '종목코드' : 1, '테마명':1}))
         
-        # # 동일업종PER
-        # col = client.Info.CompanyOverview
-        # self.CompanyOverview = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, '동일업종PER' :1}))
-        
         # 시가총액
         col = client.Info.StockEtcInfo
         self.StockEtcInfo = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, '시가총액' :1 }))
@@ -106,16 +102,6 @@ class SearchFinancial:
         col = client.Info.Financial
         self.Financial = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, '유보율':1, '부채비율' :1}))
         
-        # 당일 데이터
-        col = client.Info.StockPriceDaily
-        StockPriceDaily= pd.DataFrame(col.find({},{'_id':0, '종목코드':1, '시가' :1, '고가' :1, '저가':1, '현재가':1}))
-        StockPriceDaily.columns = ['종목코드', '시가', '고가', '저가', '종가']
-        self.StockPriceDaily = StockPriceDaily
-        
-        # 이벤트
-        col = client.Schedule.StockEvent
-        self.StockEvent = list(col.find({},{'_id':0}))
-        
         # 업종순위
         col = client.Industry.Rank
         self.IndustryRank = pd.DataFrame(col.find({}, {'_id':0, '업종명':1, '전일대비':1, '순위':1}))
@@ -123,6 +109,10 @@ class SearchFinancial:
         # 코스피/코스닥
         col = client.Info.MarketList
         self.MarketList = list(col.find({},{'_id':0}))[0]
+        
+        # Favorite list
+        col = client.Info.Favorite
+        self.favorite_list = list(col.find({},{'_id':0}))[0]['종목명']
         
     # def willR(self, stock_code):
         
@@ -171,7 +161,7 @@ class SearchFinancial:
         else :
             return 'Kosdaq'
     
-    def get_category_industry(self, target_category=None, target_industry=None):
+    def get_category_industry(self, target_category=None, target_industry=None, favorite=False, favorite_list=[]):
         분기매출 = self.data['분기_매출']
         분기영업이익 = self.data['분기_영업이익']
         분기당기순이익 = self.data['분기_당기순이익']
@@ -219,36 +209,19 @@ class SearchFinancial:
         종목리스트 = list(set(종목리스트))
         df_raw = df_raw[df_raw['종목코드'].isin(종목리스트)]
         
-        # df_raw['이벤트'] = df_raw['종목명'].apply(self.find_events_for_stock)
         df_raw = df_raw.merge(self.Financial, how='left', on='종목코드').merge(self.StockThemes, how='left', on='종목코드').merge(self.StockEtcInfo, how='left', on='종목코드')
         df_raw['시장'] = df_raw['종목코드'].apply(self.find_market_name)
         df_raw = df_raw[df_raw['업종명'] != '기타']
+        
+        if favorite :
+            df_raw = df_raw[df_raw['종목코드'].isin(favorite_list)]
+            
         return df_raw
     
-    # def get_category_industry_with_willR(self, target_category=None, target_industry=None):
-    #     df_raw = self.get_category_industry(target_category, target_industry)
-    #     for index, row in df_raw.iterrows():
-    #         stock_code = row['종목코드']
-    #         willR_values = self.willR(stock_code)
-            
-    #         # WillR 값들을 df에 추가
-    #         try :
-    #             df_raw.at[index, 'WillR9'] = round(willR_values['WillR9'][-1],1)
-    #         except :
-    #             df_raw.at[index, 'WillR9'] = ''
-    #         try :
-    #             df_raw.at[index, 'WillR14'] = round(willR_values['WillR14'][-1],1)
-    #         except :
-    #             df_raw.at[index, 'WillR14'] = ''
-    #         try :
-    #             df_raw.at[index, 'WillR33'] = round(willR_values['WillR33'][-1], 1)
-    #         except : 
-    #             df_raw.at[index, 'WillR33'] = ''
-            
-    #     return df_raw
-
-def get_매출_영업이익_순이익_증감수(industry, stock_list, column_name):
+def get_매출_영업이익_순이익_증감수(industry, stock_list, column_name, favorite=False, favorite_list=[]):
     data = industry[industry['종목코드'].isin(stock_list)]
+    if favorite :
+        data = data[data['종목코드'].isin(favorite_list)]
     data = data.groupby(by='업종명').count().reset_index().drop(columns='종목명', axis=1)
     data.columns=['업종명', column_name]
     return data
@@ -302,6 +275,47 @@ async def Search():
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "SearchFinancial Server Error"})
+
+@router.get('/searchFinancialFavorite')
+async def SearchFavorite():
+    try :
+        base = SearchFinancial()
+        
+        favorite_list=[]
+        favorite = True
+        industry = base.Industry[base.Industry['종목코드'].isin(base.favorite_list)]
+        
+        업종_count = industry.groupby(by='업종명').count().reset_index().drop(columns='종목명', axis=1)
+        업종_count.columns=['업종명', '전체종목수']
+        업종_count = 업종_count.merge(base.IndustryRank, on='업종명', how='left')
+        흑자기업수 = list(set( base.data['흑자_매출'] + base.data['흑자_영업이익'] + base.data['흑자_당기순이익'] ))
+
+        
+        흑자기업수 = get_매출_영업이익_순이익_증감수(base.Industry, 흑자기업수, '흑자기업', favorite, favorite_list)
+        미집계 = get_매출_영업이익_순이익_증감수(base.Industry, base.data['추정'], '미집계', favorite, favorite_list)
+        
+        industry = industry.drop(columns=['종목명', '종목코드'], axis=1).drop_duplicates(subset='업종명', keep='first').reset_index(drop=True)
+        industry = industry[industry['업종명'] != '기타']
+
+        dfs = [ industry,업종_count, 흑자기업수, 미집계 ]
+        industry = reduce(lambda left, right: pd.merge(left, right, on='업종명', how='left'), dfs)
+
+        industry = industry.fillna(0)
+        
+        cols = [ '미집계', '흑자기업']
+        for col in cols :
+            industry[col] = industry[col].apply(pd.to_numeric, errors = 'coerce').fillna(0)
+            industry[col] = industry[col].astype(int)
+
+        industry = industry.reset_index(drop=True)
+        industry.sort_values(by='전일대비', ascending=False, inplace=True)
+        industry['id'] = industry.index
+        
+        return industry.to_dict('records')
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "SearchFinancial Server Error"})
+
 
 def preprocessing_코스피_코스닥_업종갯수(df, 구분='Kospi', columns=['업종명', '전체종목수']):
     df = df[df['시장'] == 구분]
@@ -401,18 +415,17 @@ async def FindData(req : Request):
         req_data = await req.json()
         target_category = req_data['target_category']
         target_industry = req_data['target_industry']
-        # WillR = req_data['WillR']
+        favorite = req_data['favorite']
+        favorite_list=[]
+        if favorite :
+            favorite_list = base.favorite_list
+            
         market = req_data['market']
-        # if WillR == 'X' :
-        #     get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+        
         if target_industry == [None] :
-            get_data = base.get_category_industry(target_category=target_category, target_industry=None)
+            get_data = base.get_category_industry(target_category=target_category, target_industry=None, favorite=favorite, favorite_list=favorite_list)
         else :
-            # get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
-        # else : 
-        #     try :
-        #     except :
-            get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+            get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
         
         if market != None :
             get_data = get_data[get_data['시장'] == market]
@@ -443,7 +456,10 @@ async def FindData(req : Request):
         cate_1 = req_data['target_category1']
         cate_2 = req_data['target_category2']
         target_industry = req_data['target_industry']
-        
+        favorite = req_data['favorite']
+        favorite_list=[]
+        if favorite :
+            favorite_list = base.favorite_list
         # 업종명이 전체인지 아닌지 구분.
         if target_industry == [None] :
             target_industry = None
@@ -454,7 +470,7 @@ async def FindData(req : Request):
         종목리스트, target_category=[], []
         if 집계 == None:
             # 전체 종목을 가져오는것.
-            get_data = base.get_category_industry(target_category=None, target_industry=target_industry)
+            get_data = base.get_category_industry(target_category=None, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
             종목리스트 = financial_growth['전체']
             
         elif 집계 :
@@ -470,12 +486,12 @@ async def FindData(req : Request):
                 
                 for item2 in cate_2:
                     target_category.append(f'{item1}_{item2}')
-            get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+            get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
             
             # for cate in cate_1:
 
             if 흑자 :
-                get_check = base.get_category_industry(target_category=['흑자'], target_industry=target_industry)
+                get_check = base.get_category_industry(target_category=['흑자'], target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
                 get_data = get_data[get_data['종목코드'].isin(get_check['종목코드'].to_list())]
                 
             else : 
@@ -489,11 +505,11 @@ async def FindData(req : Request):
             if 흑자 :
                 for cate_name in cate_2 :
                     target_category.append(f'미집계_흑자_{cate_name}')
-                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
             else :
                 for cate_name in cate_2 :
                     target_category.append(f'미집계_{cate_name}')
-                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
+                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
                 
         stock_df = pd.DataFrame(종목리스트)
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
@@ -504,52 +520,3 @@ async def FindData(req : Request):
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
-    
-# @router.post('/findCrossData', response_class=JSONResponse)
-# async def FindData(req : Request):
-#     try :
-#         base = SearchFinancial()
-#         req_data = await req.json()
-#         집계 = req_data['aggregated']
-#         흑자 = req_data['surplus']
-
-#         cate_1 = req_data['target_category1']
-#         cate_2 = req_data['target_category2']
-#         target_industry = req_data['target_industry']
-        
-#         print(집계, 흑자, cate_1, cate_2, target_industry)
-#         target_category=[], []
-#         # 집계 일경우
-#         if 집계 :
-#             for item1 in cate_1:
-#                 for item2 in cate_2:
-#                     target_category.append(f'{item1}_{item2}')
-
-#         # 미집계 일경우
-#         else :
-#             if 흑자 :
-#                 for cate_name in cate_2 :
-#                     target_category.append(f'미집계_흑자_{cate_name}')
-#             else : 
-#                 for cate_name in cate_2 :
-#                     target_category.append(f'미집계_{cate_name}')
-        
-#         try :
-#             if target_industry != None :
-#                 get_data = base.get_category_industry_with_willR(target_category=target_category, target_industry=target_industry)
-            
-#             # 전체종목 불러올때는 willR 제외
-#             else :
-#                 print(target_industry, 'willR X')
-#                 get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)    
-#         except :
-#             get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry)
-        
-#         get_data = get_data.fillna(0)
-#         get_data['id'] = get_data.index
-#         print('Send')
-#         return get_data.to_dict(orient='records')
-
-#     except Exception as e:
-#         logging.error(e)
-#         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
