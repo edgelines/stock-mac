@@ -510,12 +510,25 @@ async def FindData(req : Request):
                 for cate_name in cate_2 :
                     target_category.append(f'미집계_{cate_name}')
                 get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
-                
+        
         stock_df = pd.DataFrame(종목리스트)
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
-        get_data = get_data.merge(stock_df, on='종목코드', how='left').dropna()
-        get_data['id'] = get_data.index
-        return get_data.to_dict(orient='records')
+        
+        financial = FinancialPerformance()
+        stock_code = get_data['종목코드'].to_list()
+        df = financial.실적(stock_code)
+        
+        # Chart / Table 
+        chartData = get_data.merge(stock_df, on='종목코드', how='left').dropna()
+        tableData = get_data.merge(df, on='종목코드', how='left').dropna() 
+        tableData['id'] = tableData.index
+        
+        result = { 
+          'chart' : chartData.drop(columns=['테마명', '시가총액', '시장', '유보율', '부채비율']).to_dict(orient='records'), 
+          'table' : tableData.to_dict(orient='records')
+        }
+        
+        return result
 
     except Exception as e:
         logging.error(e)
