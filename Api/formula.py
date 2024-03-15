@@ -470,7 +470,16 @@ async def FindData(req : Request):
         종목리스트, target_category=[], []
         if 집계 == None:
             # 전체 종목을 가져오는것.
-            get_data = base.get_category_industry(target_category=None, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
+            
+            if 흑자:
+                for cate_name in cate_2 :
+                    target_category.append(f'미집계_흑자_{cate_name}')
+                    target_category.append(f'흑자_{cate_name}')
+                    
+                get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
+                # get_data = get_data[get_data['종목코드'].isin(get_check['종목코드'].to_list())]
+            else :
+                get_data = base.get_category_industry(target_category=None, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
             종목리스트 = financial_growth['전체']
             
         elif 집계 :
@@ -491,7 +500,9 @@ async def FindData(req : Request):
             # for cate in cate_1:
 
             if 흑자 :
-                get_check = base.get_category_industry(target_category=['흑자'], target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
+                for cate_name in cate_2 :
+                    target_category.append(f'흑자_{cate_name}')
+                get_check = base.get_category_industry(target_category=target_category, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
                 get_data = get_data[get_data['종목코드'].isin(get_check['종목코드'].to_list())]
                 
             else : 
