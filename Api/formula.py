@@ -474,7 +474,9 @@ async def FindData(req : Request):
             if 흑자:
                 for cate_name in cate_2 :
                     target_category.append(f'미집계_흑자_{cate_name}')
+                    target_category.append(f'가결산_{cate_name}')
                     target_category.append(f'흑자_{cate_name}')
+                    target_category.append(f'연간{cate_name}')
                     
                 get_data = base.get_category_industry(target_category=target_category, target_industry=target_industry, favorite=favorite, favorite_list=favorite_list)
                 # get_data = get_data[get_data['종목코드'].isin(get_check['종목코드'].to_list())]
