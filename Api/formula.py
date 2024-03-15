@@ -508,7 +508,7 @@ async def FindData(req : Request):
                 get_data = get_data[get_data['종목코드'].isin(get_check['종목코드'].to_list())]
                 
             else : 
-                종목리스트 = financial_growth['전체']
+                종목리스트 += financial_growth['전체']
             
 
         # 미집계 일경우
