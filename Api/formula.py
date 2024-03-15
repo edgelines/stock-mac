@@ -533,7 +533,7 @@ async def FindData(req : Request):
         
         # Chart / Table 
         chartData = get_data.merge(stock_df, on='종목코드', how='left').fillna('')
-        tableData = get_data.merge(df, on='종목코드', how='left')
+        tableData = get_data.merge(df, on='종목코드', how='left').fillna('')
         tableData['id'] = tableData.index
         
         result = { 
