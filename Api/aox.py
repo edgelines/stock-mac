@@ -236,6 +236,31 @@ async def TrendData(limit:int= 35):
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
 
+@router.get('/gpo')
+async def Gpo():
+    try :
+        col = client.GPO.StartDate
+        res = list(col.find({},{'_id':0}))
+        date = res[0]['날짜']
+        col = client.Indices.Kospi200
+        data = pd.DataFrame(col.find({ '날짜' : {'$gte' : date }  }, {'_id':0, '거래량':0, '거래대금':0}))
+        
+        df = pd.merge(pd.DataFrame(res[1]), data, how='left').fillna(0)
+        df['날짜'] = pd.to_datetime(df['날짜']).astype('int64') // 10**6
+        
+        result = {
+            'data' : df.to_dict(orient='split')['data'],
+            'min' : data['저가'].min()
+        }
+        
+        return result
+        
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+
+
+
 
 @router.get('/{name}')
 async def loadDB(name):
