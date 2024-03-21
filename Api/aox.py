@@ -7,13 +7,13 @@ from pydantic import BaseModel
 from fastapi import FastAPI, Request, Response, WebSocket, HTTPException, Depends, APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.websockets import WebSocketDisconnect
 from typing import Any
 from starlette.middleware.base import BaseHTTPMiddleware
-import logging
+import logging, asyncio, time
 import Api.tools as tools
 
 router = APIRouter()
@@ -236,9 +236,11 @@ async def TrendData(limit:int= 35):
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
 
-@router.get('/gpo')
-async def Gpo():
-    try :
+async def Gpo_Kospi200(req : Request):
+    while True:
+        is_disconnected = await req.is_disconnected()
+        if is_disconnected: break
+        
         col = client.GPO.StartDate
         res = list(col.find({},{'_id':0}))
         date = res[0]['날짜']
@@ -247,19 +249,21 @@ async def Gpo():
         
         df = pd.merge(pd.DataFrame(res[1]), data, how='left').fillna(0)
         df['날짜'] = pd.to_datetime(df['날짜']).astype('int64') // 10**6
-        
-        result = {
-            'data' : df.to_dict(orient='split')['data'],
-            'min' : data['저가'].min()
+                
+        response_data = {
+            'data': df.to_dict(orient='split')['data'],
+            'min': data['저가'].min()
         }
         
-        return result
+        json_data = json.dumps(response_data)
+        yield f"data: {json_data}\n\n"
         
-    except Exception as e:
-        logging.error(e)
-        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
-
-
+        if tools.장중확인 == False : break
+        await asyncio.sleep(120)
+        
+@router.get('/gpo')
+async def Gpo(req : Request):
+    return StreamingResponse(Gpo_Kospi200(req), media_type='text/event-stream')
 
 
 @router.get('/{name}')

@@ -1,6 +1,7 @@
 import pandas as pd
 import talib.abstract as ta
 import pymongo
+from datetime import datetime
 
 client = pymongo.MongoClient(host=['192.168.0.3:27017'])
 
@@ -17,3 +18,8 @@ def 저가지수(origin_df, num, 가격기준) :
     df = df.dropna()
     return 날짜전처리(df)
 
+async def 장중확인():
+    today = datetime.today()    
+    if 8 < today.hour < 17 and today.weekday() < 5:
+        return True
+    else : False
