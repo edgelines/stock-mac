@@ -266,7 +266,7 @@ async def Stream_CTP(req : Request):
 
 
 
-#WA3 Page API
+#WA Page API
 async def create_WA_data(data:list):
     call, put, kospi200, call_mean, put_mean, mean1, mean2, CTP1, CTP15, CTP2, min_values, dates = [], [], [], [], [], [], [], [], [], [], [], []
 
@@ -408,11 +408,50 @@ async def create_ElwRatio_data():
         
     return result
 
-async def get_WA3_data(req:Request):
+# Trend Table
+async def create_trend_table_data():
+    col = client.AoX.TrendData
+    lit = list(col.find({},{'_id':0}))[-1]
+    result = [{ '구분': '코스피200', '외국인': lit['외국인_코스피200'], '외국인_누적': lit['외국인_코스피200_누적'], '기관': lit['기관_코스피200'], '기관_누적': lit['기관_코스피200_누적'], '개인': lit['개인_코스피200'], '개인_누적': lit['개인_코스피200_누적'] },
+        { '구분': '코스피', '외국인': lit['외국인_코스피'], '외국인_누적': lit['외국인_코스피_누적'], '기관': lit['기관_코스피'], '기관_누적': lit['기관_코스피_누적'], '개인': lit['개인_코스피'], '개인_누적': lit['개인_코스피_누적'] },
+        { '구분': '코스닥', '외국인': lit['외국인_코스닥'], '외국인_누적': lit['외국인_코스닥_누적'], '기관': lit['기관_코스닥'], '기관_누적': lit['기관_코스닥_누적'], '개인': lit['개인_코스닥'], '개인_누적': lit['개인_코스닥_누적'] },
+        { '구분': '선물', '외국인': lit['외국인_선물'], '외국인_누적': lit['외국인_선물_누적'], '기관': lit['기관_선물'], '기관_누적': lit['기관_선물_누적'], '개인': lit['개인_선물'], '개인_누적': lit['개인_선물_누적'] },
+        { '구분': '콜옵션', '외국인': lit['외국인_콜옵션'], '외국인_누적': lit['외국인_콜옵션_누적'], '기관': lit['기관_콜옵션'], '기관_누적': lit['기관_콜옵션_누적'], '개인': lit['개인_콜옵션'], '개인_누적': lit['개인_콜옵션_누적'] },
+        { '구분': '풋옵션', '외국인': lit['외국인_풋옵션'], '외국인_누적': lit['외국인_풋옵션_누적'], '기관': lit['기관_풋옵션'], '기관_누적': lit['기관_풋옵션_누적'], '개인': lit['개인_풋옵션'], '개인_누적': lit['개인_풋옵션_누적'] }]
+    return result
+
+async def get_WA1_data(req:Request):
     while True:
         is_disconnected = await req.is_disconnected()
         if is_disconnected: break
         
+        col = client.ELW.Month1
+        lit1 = list(col.find({},{'_id':0}))
+        WA1 = await create_WA_data(lit1)
+        col = client.ELW.Month2
+        lit2 = list(col.find({},{'_id':0}))
+        WA2 = await create_WA_data(lit2)
+        
+        result = {
+            'WA1' : WA1,
+            'WA2' : WA2,
+            'TrendData' : await create_trend_table_data(),
+        }
+        
+        json_data = json.dumps(result)
+        yield f"data: {json_data}\n\n"
+        await asyncio.sleep(120)
+
+@router.get('/weightAvgPage1')
+async def Stream_CTP(req : Request):
+    response_stream = get_WA1_data(req)
+    return StreamingResponse(response_stream, media_type='text/event-stream')
+
+
+async def get_WA3_data(req:Request):
+    while True:
+        is_disconnected = await req.is_disconnected()
+        if is_disconnected: break
         
         col = client.ELW.Month4
         lit = list(col.find({},{'_id':0}))
