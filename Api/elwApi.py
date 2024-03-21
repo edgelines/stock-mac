@@ -108,7 +108,6 @@ async def DayGr():
     result = client['ELW']['DayGr']
     response_data = list(result.find({}, {'_id':False}))
     
-    # data = pd.DataFrame(data)
     data1, data2, data3, data4, Day = [], [], [], [], []
 
     for index, value in enumerate(response_data):
@@ -263,6 +262,184 @@ async def get_weighted_avg(req:Request):
 @router.get('/WeightedAvg')
 async def Stream_CTP(req : Request):
     return StreamingResponse(get_weighted_avg(req), media_type='text/event-stream')
+
+
+
+
+#WA3 Page API
+async def create_WA_data(data:list):
+    call, put, kospi200, call_mean, put_mean, mean1, mean2, CTP1, CTP15, CTP2, min_values, dates = [], [], [], [], [], [], [], [], [], [], [], []
+
+    for value in data[-11:] :
+        call.append([value['콜_최소'], value['콜_최대']])
+        put.append([value['풋_최소'], value['풋_최대']])
+        kospi200.append(value['종가'])
+        call_mean.append( round(value['콜_가중평균'],1 ) )
+        put_mean.append( round(value['풋_가중평균'],1 ) )
+        mean1.append( round(((value['콜_가중평균'] + value['풋_가중평균']) / 2),1 ) )
+        mean2.append( round(value['콜풋_가중평균'],1 ) )
+        CTP1.append( round(value['1일'],1 ) )
+        CTP15.append( round(value['1_5일'],1 ) )
+        CTP2.append( round(value['2일'],1 ) )
+        
+        if value['콜_최소'] > 1:
+            min_values.append(value['콜_최소'])
+        if value['풋_최소'] > 1:
+            min_values.append(value['풋_최소'])
+
+        dates.append(value['최종거래일'][2:4] + '.' + value['최종거래일'][5:7] + '.' + value['최종거래일'][8:10] + '.')
+
+        min1 = min(min_values)
+
+    result = {
+        'series': [
+            {'name': 'Call', 'type': 'errorbar', 'color': '#FCAB2F', 'lineWidth': 2, 'data': call},
+            {'name': "Put", 'type': "errorbar", 'color': "#00F3FF", 'lineWidth': 2, 'data': put },
+            {'name': "Kospi200", 'type': "spline", 'color': "#efe9e9ed", 'data': kospi200, 'marker': { 'radius': 5 }, 'lineWidth': 1.5, 'zIndex': 5, },
+            {'name': "Call_mean", 'type': "spline", 'color': "#FCAB2F", 'data': call_mean, 'lineWidth': 1, 'marker': { 'symbol': "diamond", 'radius': 5 }, },
+            {'name': "Put_mean", 'type': "spline", 'color': "#00F3FF", 'data': put_mean, 'lineWidth': 0, 'marker': { 'symbol': "diamond", 'radius': 5 }, },
+            {'name': "1/2 (단순)", 'type': "line", 'color': "tomato", 'data': mean1, 'lineWidth': 1, 'marker': { 'symbol': "cross", 'radius': 8, 'lineColor': 'null', 'lineWidth': 2 }, },
+            {'name': "가중", 'type': "line", 'color': "greenyellow", 'data': mean2, 'lineWidth': 1, 'marker': { 'symbol': "cross", 'radius': 8, 'lineColor': 'null', 'lineWidth': 2 }, },
+            {'name': "1일", 'type': "spline", 'color': "pink", 'data': CTP1, 'lineWidth': 1, 'marker': { 'symbol': "circle", 'radius': 3 }, },
+            {'name': "1.5일", 'type': "spline", 'color': "gold", 'data': CTP15, 'lineWidth': 0, 'marker': { 'symbol': "circle", 'radius': 3 }, },
+            {'name': "2일", 'type': "spline", 'color': "magenta", 'data': CTP2, 'lineWidth': 0, 'marker': { 'symbol': "circle", 'radius': 3 }, },
+        ],
+        'min': min1,
+        'categories': dates,
+        'CTP' : CTP1
+    }
+    
+    return result
+
+async def create_DayGr_data():
+    col = client.ELW.DayGr
+    data_ = list(col.find({},{'_id':0}))
+    data1, data2, data3, data4, Day = [], [], [], [], []
+
+    for index, value in enumerate(data_):
+        if value['권리유형'] == '콜1':
+            data1.append(int(value['거래대금']))
+        elif value['권리유형'] == '콜2':
+            data2.append(int(value['거래대금']))
+        elif value['권리유형'] == '풋1':
+            data3.append(int(value['거래대금']))
+        elif value['권리유형'] == '풋2':
+            data4.append(int(value['거래대금']))
+
+        if index % 4 == 0:
+            next_value = data_[index + 1] if index + 1 < len(data_) else None
+            day_string = value['날짜'][4:6] + '.' + value['날짜'][6:8] + '.<br>' + str(value['영업일']) + '일<br>'
+            if next_value:
+                day_string += str(next_value['영업일']) + '일'
+            Day.append(day_string)
+
+    # 배열의 마지막 요소들을 사용하여 문자열 생성
+    잔존만기1 = str(data_[-2]['잔존만기'])
+    잔존만기2 = str(data_[-1]['잔존만기'])
+
+    callName1 = f" (<span style='color:greenyellow;'>{str(int(data_[-4]['거래대금'] / 100000000)):>4}억</span>) [ 영업 : {data_[-2]['영업일']} ]"
+    callName2 = f" (<span style='color:greenyellow;'>{str(int(data_[-3]['거래대금'] / 100000000)):>4}억</span>) [ 영업 : {data_[-1]['영업일']} ]"
+    putName1 = f" (<span style='color:greenyellow;'>{str(int(data_[-2]['거래대금'] / 100000000)):>4}억</span>) [ 영업 : {data_[-2]['영업일']} ]"
+    putName2 = f" (<span style='color:greenyellow;'>{str(int(data_[-1]['거래대금'] / 100000000)):>4}억</span>) [ 영업 : {data_[-1]['영업일']} ]"
+    
+    
+    result = {
+        'series': [{
+                'name': f'Call 잔존 : {잔존만기1} {callName1}',
+                'data': data1,
+                'color': '#FCAB2F',
+                'yAxis': 0
+            }, {
+                'name': f'Put 잔존 : {잔존만기1} {putName1}',
+                'data': data3,
+                'color': '#00F3FF',
+                'yAxis': 0
+            }, {
+                'name': f'Call 잔존 : {잔존만기2} {callName2}',
+                'data': data2,
+                'color': 'tomato',
+            }, {
+                'name': f'Put 잔존 : {잔존만기2} {putName2}',
+                'data': data4,
+                'color': 'dodgerblue',
+            }], 
+        'categories': Day
+        }
+        
+    return result
+
+async def create_ElwRatio_data():
+    result = client['ELW']['ElwRatioData']
+    data = pd.DataFrame(result.find({}, {'_id':0}).sort([('날짜', -1)]).limit(8))
+    data = data.sort_values(by='날짜')
+    data = data.to_dict(orient='records')
+    call, put, category = [],[],[]
+
+    for value in data:
+        콜비율 = round(value['콜_거래대금'] / (value['콜_거래대금'] + value['풋_거래대금']) * 100, 2)
+        풋비율 = round(value['풋_거래대금'] / (value['콜_거래대금'] + value['풋_거래대금']) * 100, 2)
+
+        날짜문자열 = str(value['날짜'])
+        날짜포맷 = 날짜문자열[4:6] + '.' + 날짜문자열[6:8]
+        카테고리문자열 = f"{날짜포맷}<br><span style=\"color:#FCAB2F\">{콜비율} %</span><br><span style=\"color:#00F3FF\">{풋비율} %</span>"
+
+        call.append(콜비율)
+        put.append(풋비율)
+        category.append(카테고리문자열)
+    
+    result = {
+        'series': [{
+                    'name': '콜',
+                    'color': '#FCAB2F',
+                    'pointPlacement': -0.08,
+                    'pointWidth': 20, 
+                    'grouping': False,
+                    'data': call
+                }, {
+                    'name': '풋',
+                    'color': '#00A7B3',
+                    'pointPlacement': 0.08,
+                    'pointWidth': 20,
+                    'grouping': False,
+                    'data': put
+                }],
+        'categories': category
+    }
+        
+    return result
+
+async def get_WA3_data(req:Request):
+    while True:
+        is_disconnected = await req.is_disconnected()
+        if is_disconnected: break
+        
+        
+        col = client.ELW.Month4
+        lit = list(col.find({},{'_id':0}))
+        WA3 = create_WA_data(lit)
+        DayGr = create_DayGr_data()
+        ElwRatioData = create_ElwRatio_data()
+        
+        result = {
+            'WA3' : WA3, 
+            'DayGr' : DayGr,
+            'ElwRatioData' : ElwRatioData
+        }
+        
+        json_data = json.dumps(result)
+        yield f"data: {json_data}\n\n"
+        await asyncio.sleep(120)
+
+@router.get('/weightAvgPage2')
+async def Stream_CTP(req : Request):
+    response_stream = get_WA3_data(req)
+    return StreamingResponse(response_stream, media_type='text/event-stream')
+
+
+
+
+
+
 
 @router.get('/{name}')
 async def loadDB(name):

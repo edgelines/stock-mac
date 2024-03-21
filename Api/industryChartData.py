@@ -163,7 +163,7 @@ async def GetThemes( request:Request ):
             topThemes[rank] = get_top_themes(allSectorNames, StockSectorsThemes, StockThemes, 종목등락률, 추출테마수)
             
         result = {
-            'origin' : stockSectorsChartData,
+            # 'origin' : stockSectorsChartData,
             'industryGr' : mergedFilteredData,
             'industryName' : allSectorNames,
             'topThemes' : topThemes
@@ -376,10 +376,11 @@ async def GetChartData(name:str):
             'BIO1': 그룹화된데이터[9], 'BIO2': 그룹화된데이터[10], 
             '식품': 그룹화된데이터[11], '아웃도어1': 그룹화된데이터[12], '아웃도어2': 그룹화된데이터[13]
             }
-        # result = {
-        #     'origin' : stockSectorsChartData,
         
-        return stockSectorsChartData[name]
+        if name != 'All' :
+            return stockSectorsChartData[name]
+        else :
+            return stockSectorsChartData
             
     except Exception as e:
         return {"error" : str(e)}
