@@ -1,70 +1,69 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-import pymongo
-import json
+from fastapi.responses import JSONResponse, StreamingResponse
+import pymongo, json, logging, asyncio
 import pandas as pd
 import numpy as np
-import logging
+
 logging.basicConfig(level=logging.INFO)
 
 router = APIRouter()
 client = pymongo.MongoClient(host=['192.168.0.3:27017'])
 
-@router.get("/CTP")
-async def get_elw_bar_data():
-    # result = client['AoX']['elwBarData']
-    result = client['ELW']['ElwBarData']
-    data = pd.DataFrame(result.find({}, {'_id':False}))
-    # 월별로 데이터를 필터링합니다.
-    data_by_month = [data[data['월구분'] == str(month)] for month in range(1, 7)]
+# @router.get("/CTP")
+# async def get_elw_bar_data():
+#     # result = client['AoX']['elwBarData']
+#     result = client['ELW']['ElwBarData']
+#     data = pd.DataFrame(result.find({}, {'_id':False}))
+#     # 월별로 데이터를 필터링합니다.
+#     data_by_month = [data[data['월구분'] == str(month)] for month in range(1, 7)]
 
-    # 각 월별 데이터에 대한 처리
-    result = []
-    for month_data in data_by_month:
-        콜_5일평균거래대금 = month_data['콜_5일평균거래대금'].to_list()
-        콜_거래대금 = month_data['콜_거래대금'].to_list()
-        풋_5일평균거래대금 = month_data['풋_5일평균거래대금'].to_list()
-        풋_거래대금 = month_data['풋_거래대금'].to_list()
-        행사가 = month_data['행사가'].to_list()
+#     # 각 월별 데이터에 대한 처리
+#     result = []
+#     for month_data in data_by_month:
+#         콜_5일평균거래대금 = month_data['콜_5일평균거래대금'].to_list()
+#         콜_거래대금 = month_data['콜_거래대금'].to_list()
+#         풋_5일평균거래대금 = month_data['풋_5일평균거래대금'].to_list()
+#         풋_거래대금 = month_data['풋_거래대금'].to_list()
+#         행사가 = month_data['행사가'].to_list()
         
-        call_sum = abs(month_data['콜_거래대금'].sum())
-        put_sum = abs(month_data['풋_거래대금'].sum())
+#         call_sum = abs(month_data['콜_거래대금'].sum())
+#         put_sum = abs(month_data['풋_거래대금'].sum())
 
-        title = month_data['잔존만기'].values[0]
+#         title = month_data['잔존만기'].values[0]
 
-        # 분모가 0인지 확인하고 비율 계산
-        if call_sum + put_sum == 0:
-            콜비율 = 0  # 또는 0.0 또는 적절한 다른 값
-            풋비율 = 0  # 또는 0.0 또는 적절한 다른 값
-        else:
-            콜비율 = f'{call_sum / (call_sum + put_sum):.2f}'
-            풋비율 = f'{put_sum / (call_sum + put_sum):.2f}'
+#         # 분모가 0인지 확인하고 비율 계산
+#         if call_sum + put_sum == 0:
+#             콜비율 = 0  # 또는 0.0 또는 적절한 다른 값
+#             풋비율 = 0  # 또는 0.0 또는 적절한 다른 값
+#         else:
+#             콜비율 = f'{call_sum / (call_sum + put_sum):.2f}'
+#             풋비율 = f'{put_sum / (call_sum + put_sum):.2f}'
 
-        비율 = f' [ C : <span style="color:greenyellow;"> {콜비율} </span>, P : <span style="color:greenyellow;"> {풋비율} </span> ]'
-        콜범주 = f'Call ( <span style="color:greenyellow;"> {int(call_sum / 100000000)} </span> 억 )'
-        풋범주 = f'Put ( <span style="color:greenyellow;"> {int(put_sum / 100000000)} </span>  억 )'
-        # 결과를 저장합니다.
-        result.append({
-            "title": title, 
-            "콜5일": 콜_5일평균거래대금, 
-            "콜": 콜_거래대금, 
-            "풋5일": 풋_5일평균거래대금, 
-            "풋": 풋_거래대금, 
-            "행사가": 행사가, 
-            "비율": 비율, 
-            "콜범주": 콜범주, 
-            "풋범주": 풋범주, 
-            "콜비율": 콜비율, 
-            "풋비율": 풋비율 
-        })
-    for i in range(len(result)):
-        for key in result[i]:
-            if isinstance(result[i][key], np.int64):
-                result[i][key] = int(result[i][key])  # np.int64를 int로 변환
-    encoded_result = jsonable_encoder(result)
+#         비율 = f' [ C : <span style="color:greenyellow;"> {콜비율} </span>, P : <span style="color:greenyellow;"> {풋비율} </span> ]'
+#         콜범주 = f'Call ( <span style="color:greenyellow;"> {int(call_sum / 100000000)} </span> 억 )'
+#         풋범주 = f'Put ( <span style="color:greenyellow;"> {int(put_sum / 100000000)} </span>  억 )'
+#         # 결과를 저장합니다.
+#         result.append({
+#             "title": title, 
+#             "콜5일": 콜_5일평균거래대금, 
+#             "콜": 콜_거래대금, 
+#             "풋5일": 풋_5일평균거래대금, 
+#             "풋": 풋_거래대금, 
+#             "행사가": 행사가, 
+#             "비율": 비율, 
+#             "콜범주": 콜범주, 
+#             "풋범주": 풋범주, 
+#             "콜비율": 콜비율, 
+#             "풋비율": 풋비율 
+#         })
+#     for i in range(len(result)):
+#         for key in result[i]:
+#             if isinstance(result[i][key], np.int64):
+#                 result[i][key] = int(result[i][key])  # np.int64를 int로 변환
+#     encoded_result = jsonable_encoder(result)
 
-    return encoded_result
+#     return encoded_result
 
 # # CallPutPage 왼쪽 상단 Chart
 # @router.get('/ElwPutCallRatioData')
@@ -152,7 +151,6 @@ async def DayGr():
     
     return result
 
-
 # CallPutPage 오른쪽 상단 Chart
 @router.get('/ElwRatioData')
 async def ElwRatioData():
@@ -182,13 +180,97 @@ async def ElwRatioData():
     
     return result
 
-@router.get('/{name}')
-async def loadDB(name):
-    try :
-        col = client['ELW'][name]
+
+# CTP 3개 
+async def get_elw_bar_data(req: Request):
+    while True:
+        is_disconnected = await req.is_disconnected()
+        if is_disconnected: break
+        
+        result = client['ELW']['ElwBarData']
+        data = pd.DataFrame(result.find({}, {'_id':False}))
+        # 월별로 데이터를 필터링합니다.
+        data_by_month = [data[data['월구분'] == str(month)] for month in range(1, 4)]
+
+        # 각 월별 데이터에 대한 처리
+        result = []
+        for month_data in data_by_month:
+            콜_5일평균거래대금 = month_data['콜_5일평균거래대금'].to_list()
+            콜_거래대금 = month_data['콜_거래대금'].to_list()
+            풋_5일평균거래대금 = month_data['풋_5일평균거래대금'].to_list()
+            풋_거래대금 = month_data['풋_거래대금'].to_list()
+            행사가 = month_data['행사가'].to_list()
+            
+            call_sum = abs(month_data['콜_거래대금'].sum())
+            put_sum = abs(month_data['풋_거래대금'].sum())
+
+            title = month_data['잔존만기'].values[0]
+
+            # 분모가 0인지 확인하고 비율 계산
+            if call_sum + put_sum == 0:
+                콜비율 = 0  # 또는 0.0 또는 적절한 다른 값
+                풋비율 = 0  # 또는 0.0 또는 적절한 다른 값
+            else:
+                콜비율 = f'{call_sum / (call_sum + put_sum):.2f}'
+                풋비율 = f'{put_sum / (call_sum + put_sum):.2f}'
+
+            비율 = f' [ C : <span style="color:greenyellow;"> {콜비율} </span>, P : <span style="color:greenyellow;"> {풋비율} </span> ]'
+            콜범주 = f'Call ( <span style="color:greenyellow;"> {int(call_sum / 100000000)} </span> 억 )'
+            풋범주 = f'Put ( <span style="color:greenyellow;"> {int(put_sum / 100000000)} </span>  억 )'
+            # 결과를 저장합니다.
+            result.append({
+                "title": title, 
+                "콜5일": 콜_5일평균거래대금, 
+                "콜": 콜_거래대금, 
+                "풋5일": 풋_5일평균거래대금, 
+                "풋": 풋_거래대금, 
+                "행사가": 행사가, 
+                "비율": 비율, 
+                "콜범주": 콜범주, 
+                "풋범주": 풋범주, 
+                "콜비율": 콜비율, 
+                "풋비율": 풋비율 
+            })
+        for i in range(len(result)):
+            for key in result[i]:
+                if isinstance(result[i][key], np.int64):
+                    result[i][key] = int(result[i][key])  # np.int64를 int로 변환
+        encoded_result = jsonable_encoder(result)
+
+        json_data = json.dumps(encoded_result)
+        yield f"data: {json_data}\n\n"
+        await asyncio.sleep(120)
+        
+    
+@router.get('/CTP')
+async def Stream_CTP(req : Request):
+    return StreamingResponse(get_elw_bar_data(req), media_type='text/event-stream')
+
+# CTP > C, X, 1/2, P Box Table
+async def get_weighted_avg(req:Request):
+    while True:
+        is_disconnected = await req.is_disconnected()
+        if is_disconnected: break
+        
+        col = client['ELW']['WeightedAvg']
         data = pd.DataFrame(col.find({},{'_id':0}))
         data = data.fillna(0)
-        return data.to_dict(orient='records')
-    except Exception as e:
-        logging.error(e)
-        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+        
+        json_data = json.dumps(data[:3].to_dict(orient='records'))
+        yield f"data: {json_data}\n\n"
+        await asyncio.sleep(120)
+
+@router.get('/WeightedAvg')
+async def Stream_CTP(req : Request):
+    return StreamingResponse(get_weighted_avg(req), media_type='text/event-stream')
+
+# @router.get('/{name}')
+# async def loadDB(name):
+#     try :
+#         col = client['ELW'][name]
+#         data = pd.DataFrame(col.find({},{'_id':0}))
+#         data = data.fillna(0)
+#         return data.to_dict(orient='records')
+#     except Exception as e:
+#         logging.error(e)
+#         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
