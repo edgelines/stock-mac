@@ -76,7 +76,7 @@ def create_series(data, name, color, zIndex, yAxis=0, lineType='normal'):
         })
     return series
 
-async def GroupData(data, name):
+def GroupData(data, name):
     Kospi200, Kospi, Kosdaq, 그룹1, 그룹2, 그룹3, 그룹4, 그룹5, day = [],[],[],[],[],[],[],[],[]
     # 데이터 처리
     if name == 'GroupDataLine' :
