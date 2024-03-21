@@ -416,9 +416,9 @@ async def get_WA3_data(req:Request):
         
         col = client.ELW.Month4
         lit = list(col.find({},{'_id':0}))
-        WA3 = create_WA_data(lit)
-        DayGr = create_DayGr_data()
-        ElwRatioData = create_ElwRatio_data()
+        WA3 = await create_WA_data(lit)
+        DayGr = await create_DayGr_data()
+        ElwRatioData = await create_ElwRatio_data()
         
         result = {
             'WA3' : WA3, 
