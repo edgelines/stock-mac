@@ -264,13 +264,13 @@ async def get_weighted_avg(req:Request):
 async def Stream_CTP(req : Request):
     return StreamingResponse(get_weighted_avg(req), media_type='text/event-stream')
 
-# @router.get('/{name}')
-# async def loadDB(name):
-#     try :
-#         col = client['ELW'][name]
-#         data = pd.DataFrame(col.find({},{'_id':0}))
-#         data = data.fillna(0)
-#         return data.to_dict(orient='records')
-#     except Exception as e:
-#         logging.error(e)
-#         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+@router.get('/{name}')
+async def loadDB(name):
+    try :
+        col = client['ELW'][name]
+        data = pd.DataFrame(col.find({},{'_id':0}))
+        data = data.fillna(0)
+        return data.to_dict(orient='records')
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
