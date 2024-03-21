@@ -379,7 +379,7 @@ async def create_bubble_data():
             color = 'tomato'
         else : color = 'dodgerblue'
         datalist.append({
-            'x' : index, 'y' : round(row['등락률'],2), 'z' : row['시가총액']/조, 'name' : name[index], 'color' : color
+            'x' : index, 'y' : round(row['등락률'],2), 'z' : round(row['시가총액']/조), 'name' : name[index], 'color' : color
         })
         
     if data.iloc[0]['전일대비'] >= 0 :
