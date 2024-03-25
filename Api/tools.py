@@ -20,6 +20,6 @@ def 저가지수(origin_df, num, 가격기준) :
 
 async def 장중확인():
     today = datetime.today()    
-    if 8 < today.hour < 17 and today.weekday() < 5:
+    if 7 < today.hour < 17 and today.weekday() < 5:
         return True
     else : False
