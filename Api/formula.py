@@ -452,8 +452,8 @@ async def FindData(req : Request):
         req_data = await req.json()
         집계 = req_data['aggregated']
         흑자 = req_data['surplus']
-        자사주 = req_data['treasury']
-        스케쥴 = req_data['schedule']
+        # 자사주 = req_data['treasury']
+        # 스케쥴 = req_data['schedule']
         
         cate_1 = req_data['target_category1']
         cate_2 = req_data['target_category2']
@@ -529,24 +529,24 @@ async def FindData(req : Request):
         stock_df = stock_df.drop_duplicates(subset='종목코드', keep='first')
         
         ### 자사주 매입 / Event 회사 list 조건 확인 후 stock_df에서 처리,
-        if 자사주 != None:
-            col = client.AoX.TreasuryStock
-            date = datetime.today()
-            startDay = date - timedelta(weeks=50, days = date.weekday())
-            query = {'거래일' : {'$gte' : startDay.strftime("%Y-%m-%d")}, '취득처분' : { '$eq': '취득'}}
-            df_자사주 = pd.DataFrame(col.find(query, {'_id':0}))
-            df_자사주 = df.drop_duplicates(subset='종목코드')
-            자사주리스트 = df_자사주['종목코드'].to_list()
-            get_data = get_data[get_data['종목코드'].isin(자사주리스트)]
+        # if 자사주 != None:
+        #     col = client.AoX.TreasuryStock
+        #     date = datetime.today()
+        #     startDay = date - timedelta(weeks=50, days = date.weekday())
+        #     query = {'거래일' : {'$gte' : startDay.strftime("%Y-%m-%d")}, '취득처분' : { '$eq': '취득'}}
+        #     df_자사주 = pd.DataFrame(col.find(query, {'_id':0}))
+        #     df_자사주 = df.drop_duplicates(subset='종목코드')
+        #     자사주리스트 = df_자사주['종목코드'].to_list()
+        #     get_data = get_data[get_data['종목코드'].isin(자사주리스트)]
         
-        if 스케쥴 != None:
-            col = client.Schedule.Weeks
-            date = datetime.today()
-            startDay = date - timedelta(weeks=6, days = date.weekday())
-            endDay = date + timedelta(weeks=6, days=6)
-            query = {'날짜' : {'$gte' : startDay, '$lte':endDay}}
-            result = list(col.find(query, {'_id':0}))
-            # 변경상장 신규상장 변경상장
+        # if 스케쥴 != None:
+        #     col = client.Schedule.Weeks
+        #     date = datetime.today()
+        #     startDay = date - timedelta(weeks=6, days = date.weekday())
+        #     endDay = date + timedelta(weeks=6, days=6)
+        #     query = {'날짜' : {'$gte' : startDay, '$lte':endDay}}
+        #     result = list(col.find(query, {'_id':0}))
+        #     # 변경상장 신규상장 변경상장
         
         financial = FinancialPerformance()
         stock_code = get_data['종목코드'].to_list()
