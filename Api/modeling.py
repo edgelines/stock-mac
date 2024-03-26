@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import logging
 import talib as ta
+from datetime import datetime
 import Api.tools as tools
 logging.basicConfig(level=logging.INFO)
 
@@ -70,7 +71,9 @@ async def Kospi200(name):
         
         col = client.GPO.StartDate
         res = list(col.find({},{'_id':0}))
-        df = pd.merge(pd.DataFrame(res[1][:10]), data, how='left').fillna(0)
+        간지 = pd.DataFrame(res[1])
+        간지 = 간지[간지['날짜'] > datetime.today()].head(10)
+        df = pd.concat([data, 간지]).fillna(0)
         df['날짜'] = pd.to_datetime(df['날짜'])
         
         df.sort_values(by='날짜', inplace=True)
