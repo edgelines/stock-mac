@@ -597,7 +597,7 @@ async def EventData(req : Request):
         result = list(col.find(query,{'_id':0}))
         
         base = SearchFinancial()
-        IndustryStocks = base.IndustryStocks
+        IndustryStocks = base.Industry
         Financial = base.Financial
         StockEtcInfo = base.StockEtcInfo
         
