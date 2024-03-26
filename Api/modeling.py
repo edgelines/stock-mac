@@ -66,24 +66,24 @@ async def WillR(num:int, dbName:str):
 async def Kospi200(name):
     try :
         col = client.ALL[name]
-        data = pd.DataFrame(col.find({},{'_id' : 0, '거래량' : 0, '거래대금' : 0}).sort('날짜', -1).limit(1200))
-        # df = pd.DataFrame(col.find({},{'_id' : 0, '거래량' : 0, '거래대금' : 0}).sort('날짜', -1).limit(1200))
+        # data = pd.DataFrame(col.find({},{'_id' : 0, '거래량' : 0, '거래대금' : 0}).sort('날짜', -1).limit(1200))
+        df = pd.DataFrame(col.find({},{'_id' : 0, '거래량' : 0, '거래대금' : 0}).sort('날짜', -1).limit(1200))
         
-        col = client.GPO.StartDate
-        res = list(col.find({},{'_id':0}))
-        간지 = pd.DataFrame(res[1])
-        간지 = 간지[간지['날짜'] > datetime.today()].head(10)
-        df = pd.concat([data, 간지]).fillna(0)
+        # col = client.GPO.StartDate
+        # res = list(col.find({},{'_id':0}))
+        # 간지 = pd.DataFrame(res[1])
+        # 간지 = 간지[간지['날짜'] > datetime.today()].head(10)
+        # df = pd.concat([data, 간지]).fillna(0)
         df['날짜'] = pd.to_datetime(df['날짜'])
         
         df.sort_values(by='날짜', inplace=True)
         df = df.reset_index(drop=True)
         df = df[['날짜', '시가', '고가', '저가', '종가']]
-        result = {
-            'data' : tools.날짜전처리(df),
-            'min': data['저가'].min()
-        }
-        return result
+        # result = {
+        #     'data' : tools.날짜전처리(df),
+        #     'min': data['저가'].min()
+        # }
+        return tools.날짜전처리(df)
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
