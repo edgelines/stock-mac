@@ -32,7 +32,7 @@ async def ADR(num:int, dbName:str):
     try :
         col = client.ALL[dbName]
         # col = client.ALL.MarketKospi200
-        df = pd.DataFrame(col.find({},{'_id' : 0, '상승%' : 0}).sort('날짜', -1).limit(1500))
+        df = pd.DataFrame(col.find({},{'_id' : 0, '상승%' : 0}).sort('날짜', -1).limit(1200))
         df['날짜'] = pd.to_datetime(df['날짜'], format='%Y-%m-%d')
         df.sort_values(by='날짜', inplace=True)
         df = df.reset_index(drop=True)
@@ -50,7 +50,7 @@ async def WillR(num:int, dbName:str):
     try :
         col = client.ALL[dbName]
         # col = client.ALL.Kospi200
-        df = pd.DataFrame(col.find({},{'_id' : 0, '거래량' : 0, '거래대금' : 0}).sort('날짜', -1).limit(1500))
+        df = pd.DataFrame(col.find({},{'_id' : 0, '거래량' : 0, '거래대금' : 0}).sort('날짜', -1).limit(1200))
         df['날짜'] = pd.to_datetime(df['날짜'])
         df.sort_values(by='날짜', inplace=True)
         df = df.reset_index(drop=True)
@@ -65,8 +65,14 @@ async def WillR(num:int, dbName:str):
 async def Kospi200(name):
     try :
         col = client.ALL[name]
-        df = pd.DataFrame(col.find({},{'_id' : 0, '거래량' : 0, '거래대금' : 0}).sort('날짜', -1).limit(1500))
+        data = pd.DataFrame(col.find({},{'_id' : 0, '거래량' : 0, '거래대금' : 0}).sort('날짜', -1).limit(1200))
+        # df = pd.DataFrame(col.find({},{'_id' : 0, '거래량' : 0, '거래대금' : 0}).sort('날짜', -1).limit(1200))
+        
+        col = client.GPO.StartDate
+        res = list(col.find({},{'_id':0}))
+        df = pd.merge(pd.DataFrame(res[1]), data, how='left').fillna(0)
         df['날짜'] = pd.to_datetime(df['날짜'])
+        
         df.sort_values(by='날짜', inplace=True)
         df = df.reset_index(drop=True)
         df = df[['날짜', '시가', '고가', '저가', '종가']]
