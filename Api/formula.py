@@ -114,51 +114,6 @@ class SearchFinancial:
         col = client.Info.Favorite
         self.favorite_list = list(col.find({},{'_id':0}))[0]['종목명']
         
-    def checkMA(self, stock_code):
-        
-        redis_client = redis.Redis(host='192.168.0.3', port=6379, db=0)
-        data_json = redis_client.get(stock_code).decode('utf-8')
-        df = pd.read_json(data_json)
-        
-        stock = self.StockPriceDaily 
-        add = stock[stock['종목코드'] == stock_code]
-        add['날짜'] = datetime.today().strftime('%Y-%m-%d')
-        add.rename(columns={ '현재가' : '종가'}, inplace=True)
-        df = pd.concat([df, add[['날짜', '시가', '고가', '저가', '종가']]])
-        df.reset_index(drop=True, inplace=True)
-        
-        TRIMA_8 = ta.TRIMA(df['시가'], timeperiod=8)
-        TRIMA_16 = ta.TRIMA(df['시가'], timeperiod=16)
-        TRIMA_27 = ta.TRIMA(df['시가'], timeperiod=27)
-        TRIMA_41 = ta.TRIMA(df['시가'], timeperiod=41)
-        
-        WMA_6 = ta.WMA((df['고가']+df['저가']+df['종가'])/3, timeperiod=6)
-        
-        trima_values = {
-            8: TRIMA_8,
-            16: TRIMA_16,
-            27: TRIMA_27,
-            41: TRIMA_41,
-        }
-        
-        # 종가와 고가 조건을 확인하는 로직
-        latest_close_price = add['종가'].iloc[-1]  # add DataFrame에서 최신 종가 가져오기
-        latest_high_price = add['고가'].iloc[-1]  # add DataFrame에서 최신 고가 가져오기
-
-        check_trima_8 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[8][-1] or latest_close_price > trima_values[8][-1])
-        check_trima_16 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[16][-1] or latest_close_price > trima_values[16][-1])
-        check_trima_27 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[27][-1] or latest_close_price > trima_values[27][-1])
-        check_trima_41 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[41][-1] or latest_close_price > trima_values[41][-1])
-        
-        # 결과 반환
-        return {
-            'TRIMA_8': check_trima_8,
-            'TRIMA_16': check_trima_16,
-            'TRIMA_27': check_trima_27,
-            'TRIMA_41': check_trima_41,
-        }
-        
-    
     def find_market_name(self, code):
         if code in self.MarketList['코스피'] :
             return 'Kospi'
@@ -573,7 +528,48 @@ async def FindData(req : Request):
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
 
+# 이평균
+def checkMA(stock_code, StockPriceDaily):
+    redis_client = redis.Redis(host='192.168.0.3', port=6379, db=0)
+    data_json = redis_client.get(stock_code).decode('utf-8')
+    df = pd.read_json(data_json)
+    
+    stock = StockPriceDaily 
+    add = stock[stock['종목코드'] == stock_code]
+    add['날짜'] = datetime.today().strftime('%Y-%m-%d')
+    df = pd.concat([df, add[['날짜', '시가', '고가', '저가', '종가']]])
+    df.reset_index(drop=True, inplace=True)
+    
+    TRIMA_8 = ta.TRIMA(df['시가'], timeperiod=8)
+    TRIMA_16 = ta.TRIMA(df['시가'], timeperiod=16)
+    TRIMA_27 = ta.TRIMA(df['시가'], timeperiod=27)
+    TRIMA_41 = ta.TRIMA(df['시가'], timeperiod=41)
+    
+    WMA_6 = ta.WMA((df['고가']+df['저가']+df['종가'])/3, timeperiod=6)
+    
+    trima_values = {
+        8: TRIMA_8,
+        16: TRIMA_16,
+        27: TRIMA_27,
+        41: TRIMA_41,
+    }
+    
+    # 종가와 고가 조건을 확인하는 로직
+    latest_close_price = add['종가'].iloc[-1]  # add DataFrame에서 최신 종가 가져오기
+    latest_high_price = add['고가'].iloc[-1]  # add DataFrame에서 최신 고가 가져오기
 
+    check_trima_8 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[8][-1] or latest_close_price > trima_values[8][-1])
+    check_trima_16 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[16][-1] or latest_close_price > trima_values[16][-1])
+    check_trima_27 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[27][-1] or latest_close_price > trima_values[27][-1])
+    check_trima_41 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[41][-1] or latest_close_price > trima_values[41][-1])
+    
+    # 결과 반환
+    return {
+        'TRIMA_8': check_trima_8,
+        'TRIMA_16': check_trima_16,
+        'TRIMA_27': check_trima_27,
+        'TRIMA_41': check_trima_41,
+    }
 
 """ 이벤트 Function """
 
@@ -631,9 +627,13 @@ async def EventData(req : Request):
         get_data = get_data.fillna(0)
         get_data['id'] = get_data.index
         
+        col_현재가 = client.Info.StockPriceDaily
+        StockPriceDaily = pd.DataFrame(col_현재가.find({},{'_id' : 0, '종목코드' :1, '시가' :1, '고가' :1, '저가' :1, '현재가' : 1}))
+        StockPriceDaily.rename(columns={ '현재가' : '종가'}, inplace=True)
+        
         for index, row in get_data.iterrows():
             stock_code = row['종목코드']
-            MA = base.checkMA(stock_code)
+            MA = checkMA(stock_code, StockPriceDaily)
             get_data.at[index, 'TRIMA_8'] = MA['TRIMA_8']
             get_data.at[index, 'TRIMA_16'] = MA['TRIMA_16']
             get_data.at[index, 'TRIMA_27'] = MA['TRIMA_27']
