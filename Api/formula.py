@@ -594,16 +594,19 @@ async def EventData(req : Request):
         
         col = client.Info.IndustryStocks
         IndustryStocks = pd.DataFrame(col.find({},{'_id':0}))
-        
+        col = client.Info.Financial
+        Financial = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, '부채비율':1, '유보율':1}))
+        col = client.Info.StockEtcInfo
+        StockEtcInfo = pd.DataFrame(col.find({},{'_id':0, '종목코드':1, '시가총액':1}))
         if event == '보호예수' :
             lit = [{
-                '날짜' : day['날짜'],
+                '날짜' : day['날짜'].strftime("%Y-%m-%d"),
                 '종목명': row['event'].split(' ')[0].replace(',',''),
                 '이벤트' : row['event']
             } for day in result for row in day['events'] if row['type'] == '신규상장']
         else : 
             lit = [{
-                '날짜' : day['날짜'],
+                '날짜' : day['날짜'].strftime("%Y-%m-%d"),
                 '종목명': row['event'].split(' ')[0].replace(',',''),
                 '이벤트' : row['event']
             } for day in result for row in day['events'] if row['type'] == '변경상장']
@@ -613,11 +616,13 @@ async def EventData(req : Request):
         get_data = get_data.merge(IndustryStocks, on='종목명')
         
         get_data = get_data[get_data['이벤트'].str.contains(event)]
+        get_data = get_data.reset_index(drop=True)
+        get_data = get_data.merge(Financial, on='종목코드').merge(StockEtcInfo, on='종목코드')
         
         financial = FinancialPerformance()
         stock_code = get_data['종목코드'].to_list()
         
-        df = financial.실적(stock_code)
+        df = financial.실적(list(set(stock_code)))
         
         get_data = get_data.merge(df, on='종목코드', how='left')
         get_data = get_data.fillna(0)
