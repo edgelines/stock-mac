@@ -577,7 +577,6 @@ async def FindData(req : Request):
 @router.post('/eventData', response_class=JSONResponse)
 async def EventData(req : Request):
     try :
-        
         req_data = await req.json()
         past = req_data['past']
         event = req_data['event']
@@ -613,7 +612,7 @@ async def EventData(req : Request):
         get_data.sort_values(by='날짜', inplace=True)
         get_data = get_data.merge(IndustryStocks, on='종목명')
         
-        get_data[get_data['이벤트'].str.contains(event)]
+        get_data = get_data[get_data['이벤트'].str.contains(event)]
         
         financial = FinancialPerformance()
         stock_code = get_data['종목코드'].to_list()
