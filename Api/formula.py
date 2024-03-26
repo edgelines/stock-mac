@@ -683,7 +683,7 @@ async def TreasuryData(req : Request):
         get_data['id'] = get_data.index
         
         col_현재가 = client.Info.StockPriceDaily
-        StockPriceDaily = pd.DataFrame(col_현재가.find({},{'_id' : 0, '종목코드' :1, '시가' :1, '고가' :1, '저가' :1, '현재가' : 1}))
+        StockPriceDaily = pd.DataFrame(col_현재가.find({},{'_id' : 0, '종목코드' :1, '시가' :1, '고가' :1, '저가' :1, '현재가' : 1, '등락률':1}))
         StockPriceDaily.rename(columns={ '현재가' : '종가'}, inplace=True)
         
         for index, row in get_data.iterrows():
