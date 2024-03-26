@@ -39,7 +39,7 @@ def 자사주_취득처분(col, code, 취득처분) :
                     }
             }
             result.append(add)
-            price_list.append(f"{row['거래일']}, {round(row['평균단가'])}")
+            price_list.append(f"{row['거래일'][2:]} : {round( format(row['평균단가'], ',') )}원")
 
     return [result, price_list]
 
