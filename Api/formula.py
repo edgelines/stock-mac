@@ -644,3 +644,58 @@ async def EventData(req : Request):
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+    
+
+# Bottom Table List
+@router.post('/treasuryData', response_class=JSONResponse)
+async def TreasuryData(req : Request):
+    try :
+        req_data = await req.json()
+        
+        treasury = req_data['treasury']
+        
+        base = SearchFinancial()
+        IndustryStocks = base.Industry
+        Financial = base.Financial
+        StockEtcInfo = base.StockEtcInfo
+        
+        col = client.AoX.TreasuryStock
+        date = datetime.today()
+        startDay = date - timedelta(weeks=50, days = date.weekday())
+        if treasury :
+            취득처분 = '취득'
+        else :
+            취득처분 = '처분'
+        query = {'거래일' : {'$gte' : startDay.strftime("%Y-%m-%d")}, '취득처분' : { '$eq': 취득처분}}
+        get_data = pd.DataFrame(col.find(query, {'_id':0, '종목명':1, '거래일':1}))
+        get_data = get_data.drop_duplicates(subset='종목명', keep='first')
+        
+        get_data = get_data.merge(IndustryStocks, on='종목명')
+        get_data = get_data.merge(Financial, on='종목코드').merge(StockEtcInfo, on='종목코드')
+        
+        financial = FinancialPerformance()
+        stock_code = get_data['종목코드'].to_list()
+        
+        df = financial.실적(list(set(stock_code)))
+        
+        get_data = get_data.merge(df, on='종목코드', how='left')
+        get_data = get_data.fillna(0)
+        get_data['id'] = get_data.index
+        
+        col_현재가 = client.Info.StockPriceDaily
+        StockPriceDaily = pd.DataFrame(col_현재가.find({},{'_id' : 0, '종목코드' :1, '시가' :1, '고가' :1, '저가' :1, '현재가' : 1}))
+        StockPriceDaily.rename(columns={ '현재가' : '종가'}, inplace=True)
+        
+        for index, row in get_data.iterrows():
+            stock_code = row['종목코드']
+            MA = checkMA(stock_code, StockPriceDaily)
+            get_data.at[index, 'TRIMA_8'] = MA['TRIMA_8']
+            get_data.at[index, 'TRIMA_16'] = MA['TRIMA_16']
+            get_data.at[index, 'TRIMA_27'] = MA['TRIMA_27']
+            get_data.at[index, 'TRIMA_41'] = MA['TRIMA_41']
+            
+        return get_data.to_dict(orient='records')
+
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
