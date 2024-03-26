@@ -70,7 +70,7 @@ async def Kospi200(name):
         
         col = client.GPO.StartDate
         res = list(col.find({},{'_id':0}))
-        df = pd.merge(pd.DataFrame(res[1]), data, how='left').fillna(0)
+        df = pd.merge(pd.DataFrame(res[1][:10]), data, how='left').fillna(0)
         df['날짜'] = pd.to_datetime(df['날짜'])
         
         df.sort_values(by='날짜', inplace=True)
