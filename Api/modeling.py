@@ -79,7 +79,11 @@ async def Kospi200(name):
         df.sort_values(by='날짜', inplace=True)
         df = df.reset_index(drop=True)
         df = df[['날짜', '시가', '고가', '저가', '종가']]
-        return tools.날짜전처리(df)
+        result = {
+            'data' : tools.날짜전처리(df),
+            'min': data['저가'].min()
+        }
+        return result
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
