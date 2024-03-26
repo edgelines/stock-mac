@@ -558,10 +558,10 @@ def checkMA(stock_code, StockPriceDaily):
     latest_close_price = add['종가'].iloc[-1]  # add DataFrame에서 최신 종가 가져오기
     latest_high_price = add['고가'].iloc[-1]  # add DataFrame에서 최신 고가 가져오기
 
-    check_trima_8 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[8][-1] or latest_close_price > trima_values[8][-1])
-    check_trima_16 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[16][-1] or latest_close_price > trima_values[16][-1])
-    check_trima_27 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[27][-1] or latest_close_price > trima_values[27][-1])
-    check_trima_41 = latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[41][-1] or latest_close_price > trima_values[41][-1])
+    check_trima_8 = -4 < add['등락률'].iloc[-1] < 5 and latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[8][-1] or latest_close_price > trima_values[8][-1])
+    check_trima_16 = -4 < add['등락률'].iloc[-1] < 5 and latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[16][-1] or latest_close_price > trima_values[16][-1])
+    check_trima_27 = -4 < add['등락률'].iloc[-1] < 5 and latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[27][-1] or latest_close_price > trima_values[27][-1])
+    check_trima_41 = -4 < add['등락률'].iloc[-1] < 5 and latest_close_price > WMA_6[-1] and (latest_high_price > trima_values[41][-1] or latest_close_price > trima_values[41][-1])
     
     # 결과 반환
     return {

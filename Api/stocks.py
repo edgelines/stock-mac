@@ -15,21 +15,22 @@ router = APIRouter()
 client = pymongo.MongoClient(host=['192.168.0.3:27017'])
 
 def 자사주_취득처분(col, code, 취득처분) :
-    data = pd.DataFrame(col.find({"종목코드" : code, '취득처분' : 취득처분},{'_id' : 0, '거래일':1}))
+    data = pd.DataFrame(col.find({"종목코드" : code, '취득처분' : 취득처분},{'_id' : 0, '거래일':1, '평균단가':1}))
     
-    result = []
+    result, price_list = [], []
     if len(data) > 0 :
-        data['거래일'] = pd.to_datetime(data['거래일']).astype('int64')//10**6    
+        
+        data['datetime'] = pd.to_datetime(data['거래일']).astype('int64')//10**6    
         datetime = data.to_dict(orient='records')    
         
         color = 'red'
         if 취득처분 == '처분' :
             color = 'dodgerblue'
-        for data in datetime :
+        for row in datetime :
             add = {
                 'color': color, 
                     'width': 2, 
-                    'value': data['거래일'], 
+                    'value': row['datetime'], 
                     'label': {
                         'text': f'자사주 {취득처분}',
                         'rotation': 0,
@@ -38,7 +39,9 @@ def 자사주_취득처분(col, code, 취득처분) :
                     }
             }
             result.append(add)
-    return result
+            price_list.append(f"{row['거래일']}, {round(row['평균단가'])}")
+
+    return [result, price_list]
 
 
 @router.get('/get/{code}')
@@ -69,7 +72,7 @@ async def getStockChartData(code, days=250, week='day') :
                 col = client.AoX.TreasuryStock
                 취득 = 자사주_취득처분(col, code, '취득')
                 처분 = 자사주_취득처분(col, code, '처분')
-                
+                # 자사주 평균단가 기입
                 WillR9 = ta.WILLR(stock['고가'], stock['저가'], stock['종가'], timeperiod=9)
                 WillR14 = ta.WILLR(stock['고가'], stock['저가'], stock['종가'], timeperiod=14)
                 WillR33 = ta.WILLR(stock['고가'], stock['저가'], stock['종가'], timeperiod=33)
@@ -80,7 +83,7 @@ async def getStockChartData(code, days=250, week='day') :
                     'w33':round(WillR33.to_list()[-1],1)
                 }
                 
-                result = { 'price' : tools.날짜전처리(stock), 'volume' : tools.날짜전처리(volume), 'net':round(net, 2), 'treasury' : 취득+처분, 'willR' : willR }
+                result = { 'price' : tools.날짜전처리(stock), 'volume' : tools.날짜전처리(volume), 'net':round(net, 2), 'treasury' : 취득[0]+처분[0], 'treasuryPrice':취득[1]+처분[1], 'willR' : willR }
                 return result
 
     except Exception as e:
