@@ -669,7 +669,7 @@ async def TreasuryData(req : Request):
         query = {'거래일' : {'$gte' : startDay.strftime("%Y-%m-%d")}, '취득처분' : { '$eq': 취득처분}}
         get_data = pd.DataFrame(col.find(query, {'_id':0, '종목명':1, '거래일':1}))
         get_data = get_data.drop_duplicates(subset='종목명', keep='first')
-        
+        get_data.rename(columns={ '거래일' : '날짜'}, inplace=True)
         get_data = get_data.merge(IndustryStocks, on='종목명')
         get_data = get_data.merge(Financial, on='종목코드').merge(StockEtcInfo, on='종목코드')
         
