@@ -567,3 +567,65 @@ async def FindData(req : Request):
     except Exception as e:
         logging.error(e)
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+
+
+
+
+""" 이벤트 Function """
+
+# Bottom Table List
+@router.post('/eventData', response_class=JSONResponse)
+async def EventData(req : Request):
+    try :
+        
+        req_data = await req.json()
+        past = req_data['past']
+        event = req_data['event']
+        
+        col = client.Schedule.Weeks
+        date = datetime.today()
+        if past :
+            weeks = 6
+        else :
+            weeks = 0
+        
+        startDay = date - timedelta(weeks=weeks, days = date.weekday())
+        query = {'날짜' : {'$gte' : startDay}}
+        result = list(col.find(query,{'_id':0}))
+        
+        col = client.Info.IndustryStocks
+        IndustryStocks = pd.DataFrame(col.find({},{'_id':0}))
+        
+        if event == '보호예수' :
+            lit = [{
+                '날짜' : day['날짜'],
+                '종목명': row['event'].split(' ')[0].replace(',',''),
+                '이벤트' : row['event']
+            } for day in result for row in day['events'] if row['type'] == '신규상장']
+        else : 
+            lit = [{
+                '날짜' : day['날짜'],
+                '종목명': row['event'].split(' ')[0].replace(',',''),
+                '이벤트' : row['event']
+            } for day in result for row in day['events'] if row['type'] == '변경상장']
+
+        get_data = pd.DataFrame(lit)
+        get_data.sort_values(by='날짜', inplace=True)
+        get_data = get_data.merge(IndustryStocks, on='종목명')
+        
+        get_data[get_data['이벤트'].str.contains(event)]
+        
+        financial = FinancialPerformance()
+        stock_code = get_data['종목코드'].to_list()
+        
+        df = financial.실적(stock_code)
+        
+        get_data = get_data.merge(df, on='종목코드', how='left')
+        get_data = get_data.fillna(0)
+        get_data['id'] = get_data.index
+        
+        return get_data.to_dict(orient='records')
+
+    except Exception as e:
+        logging.error(e)
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
